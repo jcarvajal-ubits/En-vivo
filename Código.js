@@ -1,13 +1,13 @@
 const SHEET_ID = '1OFc84Jz2CrGOvOYzQM2kNTR8qyJnLpHxpxLNmd3vVhU';
 
-// Esta función recibe las peticiones desde tu frontend
+// Esta función recibe todas las peticiones POST desde tu frontend
 function doPost(e) {
   let result = {};
 
   try {
-    // Validación por si llega una petición vacía
+    // Validación de seguridad para peticiones vacías
     if (!e || !e.postData || !e.postData.contents) {
-      throw new Error("No se recibieron datos en el body");
+      throw new Error("No se recibieron datos en el cuerpo de la petición.");
     }
 
     const body = JSON.parse(e.postData.contents);
@@ -28,30 +28,33 @@ function doPost(e) {
     result.error = error.toString();
   }
 
-  // Devolvemos una respuesta JSON al frontend
+  // Devolvemos una respuesta JSON limpia al frontend con cabeceras CORS implícitas
   return ContentService.createTextOutput(JSON.stringify(result))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-// Guarda datos del Lobby con LockService para evitar choques
+// Guarda los datos del formulario de entrada utilizando LockService
 function guardarRegistro(nombre, correo, empresa) {
   const lock = LockService.getScriptLock();
-  lock.waitLock(10000); // Espera hasta 10 segundos si otra persona está registrándose
+  // Espera hasta 10 segundos en fila si hay otros usuarios registrándose a la vez
+  lock.waitLock(10000); 
+  
   try {
     const ss = SpreadsheetApp.openById(SHEET_ID);
-    // Busca "Hoja 1", si no la encuentra usa la primera hoja disponible
+    // Intenta buscar la pestaña "Hoja 1", si no existe usa la primera que encuentre
     let sheet = ss.getSheetByName('Hoja 1') || ss.getSheets()[0];
+    
     sheet.appendRow([new Date(), nombre, correo, empresa]);
-    SpreadsheetApp.flush(); 
+    SpreadsheetApp.flush(); // Fuerza la escritura inmediata en el Excel
     return true; 
   } catch (e) {
     throw new Error("Error en guardarRegistro: " + e.toString());
   } finally {
-    lock.releaseLock();
+    lock.releaseLock(); // Libera el candado para el siguiente usuario
   }
 }
 
-// Guarda mensajes con LockService
+// Guarda las preguntas/mensajes del chat en la pestaña correspondiente
 function guardarMensaje(nombre, texto) {
   if (!nombre || !texto) return getDatos(); 
   
@@ -60,10 +63,12 @@ function guardarMensaje(nombre, texto) {
 
   const lock = LockService.getScriptLock();
   lock.waitLock(10000); 
+  
   try {
     const ss = SpreadsheetApp.openById(SHEET_ID);
     let sheetPreguntas = ss.getSheetByName('Preguntas');
     
+    // Si la pestaña "Preguntas" no existe, la crea automáticamente con sus títulos
     if (!sheetPreguntas) {
       sheetPreguntas = ss.insertSheet('Preguntas');
       sheetPreguntas.appendRow(['Fecha', 'Hora', 'Usuario', 'Pregunta']);
@@ -78,20 +83,21 @@ function guardarMensaje(nombre, texto) {
     lock.releaseLock();
   }
 
+  // Actualiza la memoria interna rápida (ScriptProperties) para el Chat en vivo
   const props = PropertiesService.getScriptProperties();
   let chatData = props.getProperty('CHAT_GLOBAL');
   let chat = chatData ? JSON.parse(chatData) : [];
   
   chat.push({ hora: hora, nombre: nombre, texto: texto });
-  if (chat.length > 50) chat.shift();
+  if (chat.length > 50) chat.shift(); // Mantiene solo los últimos 50 mensajes en caché
   
   props.setProperty('CHAT_GLOBAL', JSON.stringify(chat));
-  props.setProperty('CACHE_TIME', '0'); 
+  props.setProperty('CACHE_TIME', '0'); // Fuerza la actualización en el próximo getDatos
 
   return getDatos();
 }
 
-// Sincroniza reacciones
+// Sincroniza las reacciones de emojis en tiempo real
 function guardarReaccion(emoji) {
   const props = PropertiesService.getScriptProperties();
   let reaccData = props.getProperty('REACCIONES_GLOBAL');
@@ -104,13 +110,14 @@ function guardarReaccion(emoji) {
   });
   
   const now = new Date().getTime();
+  // Borra reacciones que tengan más de 10 segundos para no saturar la memoria
   reacciones = reacciones.filter(r => now - r.time < 10000);
   
   props.setProperty('REACCIONES_GLOBAL', JSON.stringify(reacciones));
   return getDatos();
 }
 
-// Función maestra
+// Obtiene los mensajes y reacciones (Optimizado con caché de 3 segundos)
 function getDatos() {
   const props = PropertiesService.getScriptProperties();
   const now = new Date().getTime();
