@@ -4,7 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <title>UBITS Live Stream</title>
   <style>
+    /* TODO TU CSS ORIGINAL SE MANTIENE EXACTAMENTE IGUAL AQUÍ */
     :root {
       --bg-dark: #04101f;
       --bg-darker: #020812;
@@ -15,14 +17,7 @@
     }  
     body { margin: 0; padding: 0; height: 100vh; width: 100vw; font-family: 'Inter', sans-serif; overflow: hidden; background-color: var(--bg-darker); }  
     
-    /* ================= LOBBY RESPONSIVO ================= */
-    #lobby-screen {       
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;       
-      background: radial-gradient(circle at bottom, #0a1f3d 0%, var(--bg-darker) 70%);       
-      display: flex; flex-direction: column; align-items: center; justify-content: center;       
-      z-index: 2000; transition: opacity 0.6s ease; color: white;
-      padding: 20px; box-sizing: border-box; overflow-y: auto;     
-    }
+    #lobby-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at bottom, #0a1f3d 0%, var(--bg-darker) 70%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; transition: opacity 0.6s ease; color: white; padding: 20px; box-sizing: border-box; overflow-y: auto; }
     .lobby-content { display: flex; flex-direction: column; align-items: center; justify-content: center; max-width: 400px; width: 100%; text-align: center; margin: auto; }    
     .lobby-logo { width: 110px; margin-bottom: 20px; border-radius: 8px; }     
     .pill-badge { background: linear-gradient(90deg, rgba(26,107,255,0.2), rgba(46,198,255,0.2)); border: 1px solid rgba(46,198,255,0.3); padding: 6px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; margin-bottom: 15px; }    
@@ -35,62 +30,26 @@
     .btn-submit { width: 100%; padding: 14px; margin-top: 5px; background: var(--blue-primary); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.3s; }    
     .btn-submit:hover { background: var(--blue-cyan); transform: translateY(-2px); }  
     
-    /* ================= LIVE CONTAINER ================= */
-    #live-screen {       
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;       
-      z-index: 10; background: var(--bg-darker); padding: 15px; box-sizing: border-box;      
-      display: flex; flex-direction: row; gap: 15px;    
-    }        
-    .main-video-section {      
-      width: 100%; height: 100%; position: relative;       
-      transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);    
-    }    
-    #live-screen.chat-opened .main-video-section {       
-      width: 73%;     
-    }  
-    .video-wrapper {       
-      width: 100%; height: 100%; position: relative; border-radius: 20px; overflow: hidden;       
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 1px solid rgba(46, 198, 255, 0.2);       
-      background: #000; display: flex; align-items: center; justify-content: center;    
-    }        
+    #live-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; background: var(--bg-darker); padding: 15px; box-sizing: border-box; display: flex; flex-direction: row; gap: 15px; }        
+    .main-video-section { width: 100%; height: 100%; position: relative; transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }    
+    #live-screen.chat-opened .main-video-section { width: 73%; }  
+    .video-wrapper { width: 100%; height: 100%; position: relative; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 1px solid rgba(46, 198, 255, 0.2); background: #000; display: flex; align-items: center; justify-content: center; }        
     
-    /* Ajuste responsivo de alta fidelidad para iFrame de Vimeo */
     #vimeoplayer { width: 100%; height: 100%; border: none; }  
     
-    /* ================= ETIQUETA EN VIVO FIJA ================= */
-    .badge-en-vivo-flotante {      
-      position: absolute; top: 25px; left: 25px; z-index: 180;       
-      background: rgba(4, 16, 31, 0.75); backdrop-filter: blur(8px);       
-      border: 1px solid rgba(255, 255, 255, 0.1); padding: 6px 12px; border-radius: 6px;       
-      display: flex; align-items: center; gap: 6px; pointer-events: none; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);    
-    }    
+    .badge-en-vivo-flotante { position: absolute; top: 25px; left: 25px; z-index: 180; background: rgba(4, 16, 31, 0.75); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 6px 12px; border-radius: 6px; display: flex; align-items: center; gap: 6px; pointer-events: none; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); }    
     .badge-en-vivo-flotante .punto-rojo { width: 6px; height: 6px; background-color: var(--ubits-ai-pink); border-radius: 50%; animation: pulse 1.5s infinite; }    
     .badge-en-vivo-flotante span { color: #ffffff; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }  
     
-    /* ================= PANTALLA DE CARGA ================= */
     #video-loader { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-dark); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; transition: opacity 0.6s ease; pointer-events: none; }    
     .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--blue-cyan); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }    
     .loader-text { color: white; font-size: 14px; font-weight: 600; letter-spacing: 1px; animation: pulseText 1.5s infinite; text-align: center; padding: 0 20px;}    
     @keyframes spin { to { transform: rotate(360deg); } }  
     
-    /* ================= CHAT SIDEBAR ================= */
-    .btn-toggle-chat {       
-      position: absolute; bottom: 35px; right: 35px;       
-      background: var(--bg-dark); color: white; border: 1px solid var(--blue-primary);       
-      border-radius: 50px; padding: 10px 22px; font-size: 14px; font-weight: 600;       
-      cursor: pointer; z-index: 1000; font-family: 'Inter'; display: flex; align-items: center; gap: 8px;       
-      box-shadow: 0 10px 25px rgba(0,0,0,0.7); backdrop-filter: blur(5px);     
-    }    
+    .btn-toggle-chat { position: absolute; bottom: 35px; right: 35px; background: var(--bg-dark); color: white; border: 1px solid var(--blue-primary); border-radius: 50px; padding: 10px 22px; font-size: 14px; font-weight: 600; cursor: pointer; z-index: 1000; font-family: 'Inter'; display: flex; align-items: center; gap: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.7); backdrop-filter: blur(5px); }    
     .btn-toggle-chat:hover { background: var(--blue-primary); border-color: var(--blue-cyan); }  
     
-    #chat-sidebar {       
-      display: none;       
-      width: 27%; min-width: 280px;       
-      height: 100%; background-color: var(--bg-dark);       
-      border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);      
-      border: 1px solid rgba(255,255,255,0.05);      
-      flex-direction: column; animation: fadeInChat 0.3s ease;    
-    }        
+    #chat-sidebar { display: none; width: 27%; min-width: 280px; height: 100%; background-color: var(--bg-dark); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); flex-direction: column; animation: fadeInChat 0.3s ease; }        
     .chat-header { padding: 15px 20px; background: rgba(0,0,0,0.15); border-bottom: 1px solid rgba(255,255,255,0.05); color: white; font-weight: 600; font-size: 14px; display: flex; justify-content: space-between; align-items: center; border-radius: 20px 20px 0 0; }    
     .mensajes-area { flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }    
     .mensajes-area::-webkit-scrollbar { width: 6px; }    
@@ -111,7 +70,6 @@
     @keyframes fadeInChat { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }    
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }  
     
-    /* MEDIA QUERY PARA CELULARES */    
     @media (max-width: 600px) {      
       #live-screen { padding: 8px; gap: 0; }      
       #live-screen.chat-opened .main-video-section { width: 100% !important; }      
@@ -151,7 +109,7 @@
         
         <div id="video-loader">          
           <div class="spinner"></div>          
-          <div class="loader-text">Conectando a la transmisión de Vimeo...</div>        
+          <div class="loader-text">Conectando a la transmisión...</div>        
         </div>        
         
         <iframe 
@@ -190,9 +148,13 @@
   </div>  
   
   <script>    
-    let usuarioActual = ""; let isChatOpen = false; let emojisAnimados = [];         
+    // REEMPLAZA ESTA URL POR LA QUE COPIASTE EN EL PASO 1
+    const API_URL = "AQUI_VA_LA_URL_DE_TU_NUEVO_WEB_APP_DE_APPS_SCRIPT"; 
     
-    // Ocultar pantalla de carga una vez cargado el iFrame de Vimeo
+    let usuarioActual = ""; 
+    let isChatOpen = false; 
+    let emojisAnimados = [];         
+    
     document.getElementById('vimeoplayer').addEventListener('load', function() {
       const loader = document.getElementById('video-loader');
       if (loader) { 
@@ -217,31 +179,55 @@
       }    
     }  
   
-    function entrarLive(event) {      
+    // ================= FUNCIONES DE API (NUEVAS) =================
+    // Función utilitaria para llamar a nuestro Backend en Apps Script
+    async function apiCall(action, data = {}) {
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          // Usamos text/plain para evitar bloqueos severos de CORS en Apps Script
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+          body: JSON.stringify({ action: action, ...data })
+        });
+        const result = await response.json();
+        if (result.data) {
+          procesarDatos(result.data);
+        }
+        return result;
+      } catch (error) {
+        console.error("Error en la API:", error);
+      }
+    }
+
+    async function entrarLive(event) {      
       event.preventDefault(); 
       const nombre = document.getElementById('regNombre').value.trim(); 
       const correo = document.getElementById('regCorreo').value.trim(); 
       const empresa = document.getElementById('regEmpresa').value.trim(); 
       const btn = document.getElementById('btnEntrar');      
+      
       if (!nombre || !correo || !empresa) return; 
       btn.disabled = true; 
       btn.innerText = "Conectando...";      
       
-      google.script.run.withSuccessHandler(function() { 
-        usuarioActual = nombre; 
-        document.getElementById('lobby-screen').style.opacity = '0'; 
-        setTimeout(() => { 
-          document.getElementById('lobby-screen').style.display = 'none'; 
-          iniciarChat(); 
-          setTimeout(toggleChat, 800); 
-        }, 600); 
-      }).guardarRegistro(nombre, correo, empresa);    
+      // Llamada al API
+      await apiCall('guardarRegistro', { nombre, correo, empresa });
+      
+      usuarioActual = nombre; 
+      document.getElementById('lobby-screen').style.opacity = '0'; 
+      setTimeout(() => { 
+        document.getElementById('lobby-screen').style.display = 'none'; 
+        iniciarChat(); 
+        setTimeout(toggleChat, 800); 
+      }, 600); 
     }        
     
     const cajaMensajes = document.getElementById('cajaMensajes'); 
     const inputMensaje = document.getElementById('inputMensaje');        
     
     function procesarDatos(datos) {      
+      if (!datos) return;
+      
       const esNuevoChat = cajaMensajes.dataset.ultimoMensaje !== JSON.stringify(datos.mensajes);      
       if (esNuevoChat) {        
         cajaMensajes.innerHTML = ''; 
@@ -263,9 +249,21 @@
       if (emojisAnimados.length > 100) emojisAnimados = emojisAnimados.slice(-50);    
     }        
     
-    function pedirDatos() { google.script.run.withSuccessHandler(procesarDatos).getDatos(); }    
-    function enviar() { const texto = inputMensaje.value.trim(); if (!texto) return; inputMensaje.value = ''; google.script.run.withSuccessHandler(procesarDatos).guardarMensaje(usuarioActual, texto); }    
-    function enviarReaccion(emoji) { crearEmojiFlotante(emoji); google.script.run.withSuccessHandler(procesarDatos).guardarReaccion(emoji); }        
+    function pedirDatos() { 
+      apiCall('getDatos'); 
+    }    
+    
+    function enviar() { 
+      const texto = inputMensaje.value.trim(); 
+      if (!texto) return; 
+      inputMensaje.value = ''; 
+      apiCall('guardarMensaje', { nombre: usuarioActual, texto: texto });
+    }    
+    
+    function enviarReaccion(emoji) { 
+      crearEmojiFlotante(emoji); 
+      apiCall('guardarReaccion', { emoji: emoji });
+    }        
     
     document.getElementById('registroForm').addEventListener('keypress', function(event) {
       if (event.key === 'Enter' && event.target.tagName !== 'BUTTON') {
@@ -282,8 +280,14 @@
       setTimeout(() => { el.remove(); }, 2500);    
     }        
     
-    inputMensaje.addEventListener("keypress", function(event) { if (event.key === "Enter") { event.preventDefault(); enviar(); }});    
-    function iniciarChat() { pedirDatos(); setInterval(pedirDatos, 2500); }  
+    inputMensaje.addEventListener("keypress", function(event) { 
+      if (event.key === "Enter") { event.preventDefault(); enviar(); }
+    });    
+    
+    function iniciarChat() { 
+      pedirDatos(); 
+      setInterval(pedirDatos, 3000); // Subí un poco a 3s para optimizar recursos
+    }  
   </script>
 </body>
 </html>
