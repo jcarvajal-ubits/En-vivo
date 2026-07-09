@@ -6,7 +6,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <title>UBITS Live Stream</title>
   <style>
-    /* TODO TU CSS ORIGINAL SE MANTIENE EXACTAMENTE IGUAL AQUÍ */
     :root {
       --bg-dark: #04101f;
       --bg-darker: #020812;
@@ -187,7 +186,8 @@
           method: 'POST',
           // Usamos text/plain para evitar bloqueos severos de CORS en Apps Script
           headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
-          body: JSON.stringify({ action: action, ...data })
+          body: JSON.stringify({ action: action, ...data }),
+          redirect: 'follow' // <--- ESTA ES LA LÍNEA MÁGICA QUE FALTABA
         });
         const result = await response.json();
         if (result.data) {
