@@ -1,10 +1,28 @@
 const SHEET_ID = '1OFc84Jz2CrGOvOYzQM2kNTR8qyJnLpHxpxLNmd3vVhU';
 
-function doGet() {
-  return HtmlService.createHtmlOutputFromFile('Index')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-    .setTitle('UBITS Live Stream');
+// Esta función recibe las peticiones desde Vercel
+function doPost(e) {
+  const body = JSON.parse(e.postData.contents);
+  const action = body.action;
+  let result = {};
+
+  try {
+    if (action === 'guardarRegistro') {
+      result.success = guardarRegistro(body.nombre, body.correo, body.empresa);
+    } else if (action === 'guardarMensaje') {
+      result.data = guardarMensaje(body.nombre, body.texto);
+    } else if (action === 'guardarReaccion') {
+      result.data = guardarReaccion(body.emoji);
+    } else if (action === 'getDatos') {
+      result.data = getDatos();
+    }
+  } catch (error) {
+    result.error = error.toString();
+  }
+
+  // Devolvemos una respuesta JSON al frontend
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 // Guarda datos del Lobby
@@ -18,7 +36,7 @@ function guardarRegistro(nombre, correo, empresa) {
   }
 }
 
-// Guarda mensajes directamente en el Sheet "Preguntas" y actualiza la vista rápida
+// Guarda mensajes
 function guardarMensaje(nombre, texto) {
   if (!nombre || !texto) return getDatos(); 
   
@@ -36,13 +54,11 @@ function guardarMensaje(nombre, texto) {
     }
     
     sheetPreguntas.appendRow([fecha, hora, nombre, texto]);
-    SpreadsheetApp.flush(); // Fuerza la escritura inmediata
-    
+    SpreadsheetApp.flush(); 
   } catch(e) {
     Logger.log("Error guardando en sheet Preguntas: " + e);
   }
 
-  // Guardamos en las propiedades del script para asegurar actualización instantánea local
   const props = PropertiesService.getScriptProperties();
   let chatData = props.getProperty('CHAT_GLOBAL');
   let chat = chatData ? JSON.parse(chatData) : [];
@@ -51,12 +67,12 @@ function guardarMensaje(nombre, texto) {
   if (chat.length > 50) chat.shift();
   
   props.setProperty('CHAT_GLOBAL', JSON.stringify(chat));
-  props.setProperty('CACHE_TIME', '0'); // Rompe el caché para forzar sincronización técnica
+  props.setProperty('CACHE_TIME', '0'); 
 
   return getDatos();
 }
 
-// Sincroniza reacciones de emojis
+// Sincroniza reacciones
 function guardarReaccion(emoji) {
   const props = PropertiesService.getScriptProperties();
   let reaccData = props.getProperty('REACCIONES_GLOBAL');
@@ -75,14 +91,13 @@ function guardarReaccion(emoji) {
   return getDatos();
 }
 
-// Función maestra optimizada para lectura libre de bloqueos en iframes
+// Función maestra
 function getDatos() {
   const props = PropertiesService.getScriptProperties();
   const now = new Date().getTime();
   let cacheTime = parseInt(props.getProperty('CACHE_TIME') || '0');
   let chat = [];
   
-  // Sincronización robusta con Google Sheets cada 3 segundos
   if (now - cacheTime > 3000) {
     try {
       const ss = SpreadsheetApp.openById(SHEET_ID);
@@ -91,15 +106,11 @@ function getDatos() {
       if (sheetPreguntas) {
         const lastRow = sheetPreguntas.getLastRow();
         if (lastRow > 1) {
-          // Cargamos los datos de manera directa usandogetDataRange() para saltar bloqueos de seguridad del iframe
           const data = sheetPreguntas.getDataRange().getValues();
-          
-          // Filtramos las últimas 50 filas excluyendo el encabezado de forma segura
-          const filasMensajes = data.slice(1); // Quita la fila 1 (encabezados)
-          const ultimosMensajes = filasMensajes.slice(-50); // Agarra los últimos 50
+          const filasMensajes = data.slice(1);
+          const ultimosMensajes = filasMensajes.slice(-50);
           
           chat = ultimosMensajes.map(row => {
-            // Aseguramos que la hora mantenga el formato string correcto al leerse
             let horaFormateada = row[1];
             if (horaFormateada instanceof Date) {
               horaFormateada = horaFormateada.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -123,7 +134,6 @@ function getDatos() {
     chat = chatData ? JSON.parse(chatData) : [];
   }
 
-  // Leer reacciones de emojis
   let reaccData = props.getProperty('REACCIONES_GLOBAL');
   let reacciones = reaccData ? JSON.parse(reaccData) : [];
   reacciones = reacciones.filter(r => now - r.time < 10000);
