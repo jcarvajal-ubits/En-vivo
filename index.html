@@ -29,7 +29,7 @@
     .btn-submit { width: 100%; padding: 14px; margin-top: 5px; background: var(--blue-primary); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.3s; }    
     .btn-submit:hover { background: var(--blue-cyan); transform: translateY(-2px); }  
     
-    #live-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; background: var(--bg-darker); padding: 15px; box-sizing: border-box; display: flex; flex-direction: row; gap: 15px; }         
+    #live-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; background: var(--bg-darker); padding: 15px; box-sizing: border-box; display: flex; flex-direction: row; gap: 15px; }        
     .main-video-section { width: 100%; height: 100%; position: relative; transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }    
     #live-screen.chat-opened .main-video-section { width: 73%; }  
     .video-wrapper { width: 100%; height: 100%; position: relative; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 1px solid rgba(46, 198, 255, 0.2); background: #000; display: flex; align-items: center; justify-content: center; }        
@@ -147,7 +147,7 @@
   </div>  
   
   <script>    
-    // ⚠️ REEMPLAZA ESTA URL POR TU NUEVA URL DE IMPLEMENTACIÓN DE APPS SCRIPT
+    // REEMPLAZA ESTA URL POR LA QUE COPIASTE EN EL PASO 1
     const API_URL = "https://script.google.com/macros/s/AKfycbwQdVfQzXv0SoXRbvM3JfT4cX-JWaME22ALLcTsGRE6afQg5gOdqcoNRrJlEee5CDF0/exec"; 
     
     let usuarioActual = ""; 
@@ -178,29 +178,24 @@
       }    
     }  
   
-    // Función utilitaria principal para conectar con el backend
+    // ================= FUNCIONES DE API (NUEVAS) =================
+    // Función utilitaria para llamar a nuestro Backend en Apps Script
     async function apiCall(action, data = {}) {
       try {
         const response = await fetch(API_URL, {
           method: 'POST',
+          // Usamos text/plain para evitar bloqueos severos de CORS en Apps Script
           headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
           body: JSON.stringify({ action: action, ...data }),
-          redirect: 'follow' 
+          redirect: 'follow' // <--- ESTA ES LA LÍNEA MÁGICA QUE FALTABA
         });
-        
         const result = await response.json();
-        
-        if (result.error) {
-          console.error("❌ Error interno en Apps Script:", result.error);
-          return null;
-        }
-
         if (result.data) {
           procesarDatos(result.data);
         }
         return result;
       } catch (error) {
-        console.error("❌ Error de conexión Fetch hacia la API:", error);
+        console.error("Error en la API:", error);
       }
     }
 
@@ -215,22 +210,16 @@
       btn.disabled = true; 
       btn.innerText = "Conectando...";      
       
-      // Llama al backend para guardar en "Hoja 1"
-      const res = await apiCall('guardarRegistro', { nombre, correo, empresa });
+      // Llamada al API
+      await apiCall('guardarRegistro', { nombre, correo, empresa });
       
-      if (res && res.success) {
-        usuarioActual = nombre; 
-        document.getElementById('lobby-screen').style.opacity = '0'; 
-        setTimeout(() => { 
-          document.getElementById('lobby-screen').style.display = 'none'; 
-          iniciarChat(); 
-          setTimeout(toggleChat, 800); 
-        }, 600); 
-      } else {
-        alert("Hubo un problema al registrarte. Por favor intenta de nuevo.");
-        btn.disabled = false;
-        btn.innerText = "Unirse a la transmisión";
-      }
+      usuarioActual = nombre; 
+      document.getElementById('lobby-screen').style.opacity = '0'; 
+      setTimeout(() => { 
+        document.getElementById('lobby-screen').style.display = 'none'; 
+        iniciarChat(); 
+        setTimeout(toggleChat, 800); 
+      }, 600); 
     }        
     
     const cajaMensajes = document.getElementById('cajaMensajes'); 
@@ -297,7 +286,7 @@
     
     function iniciarChat() { 
       pedirDatos(); 
-      setInterval(pedirDatos, 3000); // Consulta la base de datos de mensajes cada 3 segundos
+      setInterval(pedirDatos, 3000); // Subí un poco a 3s para optimizar recursos
     }  
   </script>
 </body>
