@@ -356,7 +356,7 @@
 
         <iframe
           id="vimeoplayer"
-          src="https://vimeo.com/event/6043961/embed"
+          src=""
           frameborder="0"
           allow="autoplay; fullscreen; picture-in-picture; encrypted-media; web-share"
           referrerpolicy="strict-origin-when-cross-origin"
@@ -458,11 +458,14 @@
       window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
     }
 
+    // AJUSTE: Validar que el iframe tenga src de Vimeo para quitar el loader
     document.getElementById('vimeoplayer').addEventListener('load', function() {
-      const loader = document.getElementById('video-loader');
-      if (loader) {
-        loader.style.opacity = '0';
-        setTimeout(() => loader.style.display = 'none', 600);
+      if (this.src && this.src.includes('vimeo')) {
+        const loader = document.getElementById('video-loader');
+        if (loader) {
+          loader.style.opacity = '0';
+          setTimeout(() => loader.style.display = 'none', 600);
+        }
       }
     });
 
@@ -604,6 +607,9 @@
 
       // Éxito: Transición al Live Stream
       document.getElementById('lobby-screen').style.opacity = '0';
+      
+      // AJUSTE: INYECTAR EL VIDEO AQUÍ CON AUTOPLAY ACTIVADO
+      document.getElementById('vimeoplayer').src = "https://vimeo.com/event/6043961/embed?autoplay=1";
       
       setTimeout(() => {
         document.getElementById('lobby-screen').style.display = 'none';
