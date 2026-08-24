@@ -26,7 +26,7 @@
       color: white;
     }
 
-    /* Fondo elegante */
+    /* Fondo elegante - Usando tu imagen original */
     #lobby-screen {
       position: absolute; top: 0; left: 0;
       width: 100%; height: 100%;
@@ -403,6 +403,7 @@
   </div>
 
   <script>
+    // AQUI COLOCAS TU URL DE GOOGLE APPS SCRIPT
     const API_URL = "https://script.google.com/macros/s/AKfycbzmBBtT-E0LDjmkGQU55rFz6L8bAGPJeBFTj__ahrEqJ5MpzekkgPNjjZ-gYZY1TZNg/exec";
 
     let usuarioActual = "";
@@ -426,9 +427,6 @@
       const utterThis = new SpeechSynthesisUtterance(texto);
       const voces = synth.getVoices();
       
-      // ALGORITMO MEJORADO PARA ENCONTRAR VOZ MASCULINA NATURAL
-      // 1. Prioriza "Microsoft Gonzalo" (Windows CO) o "Google Español" (Chrome Android - muy natural)
-      // 2. Busca explícitamente voces marcadas como 'male' (masculinas) en español
       let vozIdeal = voces.find(v => v.name.includes('Gonzalo')) || 
                      voces.find(v => v.name === 'Google Español' || v.name === 'Google español') ||
                      voces.find(v => v.lang === 'es-CO' && v.name.toLowerCase().includes('male')) ||
@@ -455,13 +453,10 @@
     }
 
     function hablarPaso2() {
-      // Guion ajustado para fluidez de la marca y cierre exacto
       const texto = "¡Hola! Qué gran emoción tenerte aquí. ... Muchísimas gracias por registrarte. ... Te doy la bienvenida oficial a este lanzamiento tan especial. ... Prepárate para descubrir cómo estamos revolucionando el futuro del talento en iúbits. ... Para que tu experiencia de hoy sea increíble, me encantaría conocerte un poquito mejor. ... Solo te tomará unos segundos. ... Primera pregunta... ¿A qué área de tu empresa perteneces? ... Segunda pregunta... Cuéntame, ¿qué tan seguido usas herramientas de inteligencia artificial en tu día a día? ... Y tercera, y última pregunta... ¿Cuál de estas herramientas has usado recientemente? ... Es muy fácil. ... Al finalizar, dale clic en entrar al live, y disfruta de esta sesión. ... ¡Nos vemos adentro!";
-      
       reproducirVoz(texto, 'btnVoice2');
     }
 
-    // Cargar las voces por adelantado (Solución a un comportamiento en Chrome)
     if ('speechSynthesis' in window) {
       window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
     }
@@ -484,22 +479,38 @@
       }
     }));
 
-    document.querySelectorAll('input[name="q3"]').forEach(r => r.addEventListener('change', (e) => {
-      const inputOtra = document.getElementById('inputOtraHerramienta');
-      if (e.target.value === 'Otra') {
-        inputOtra.style.display = 'block'; inputOtra.required = true; inputOtra.focus();
-      } else {
-        inputOtra.style.display = 'none'; inputOtra.required = false; inputOtra.value = '';
-      }
-    }));
-
-    function irPaso2(event) {
-      event.preventDefault();
+    //    // FUNCION DEL PASO 1 AL PASO 2 (Modificada para guardar registro inmediatamente)
+    async function irPaso2(event) {
+      event.preventDefault(); 
+      
       const nombre = document.getElementById('regNombre').value.trim();
       const correo = document.getElementById('regCorreo').value.trim();
       const empresa = document.getElementById('regEmpresa').value.trim();
-      if(!nombre || !correo || !empresa) return;
       
+      if(!nombre || !correo || !empresa) return; 
+      
+      // Guardar el nombre para el chat de una vez
+      usuarioActual = nombre;
+
+      // Cambiar texto del botón a "Cargando..." temporalmente (opcional pero recomendado)
+      const btnPaso1 = event.target.querySelector('button[type="submit"]');
+      const btnOriginalText = btnPaso1.innerHTML;
+      btnPaso1.innerHTML = 'Guardando...';
+      btnPaso1.disabled = true;
+
+      // 1. Enviar datos de registro al backend inmediatamente
+      const result = await apiCall('guardarRegistroBasico', { nombre, correo, empresa });
+      
+      if (!result || result.error || result.success === false) {
+         console.error("Error al guardar registro básico:", result?.error);
+         // Podrías mostrar un mensaje de error o dejar continuar de todos modos
+      }
+      
+      // Restaurar botón (por si vuelve atrás, aunque el formulario no está pensado para eso)
+      btnPaso1.innerHTML = btnOriginalText;
+      btnPaso1.disabled = false;
+
+      // 2. Proceder al Paso 2
       // Detener cualquier voz anterior
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
 
@@ -551,17 +562,17 @@
       }
     }
 
+    //    // FUNCION DE ENVÍO FINAL A GOOGLE SHEETS (Modificada para enviar solo encuesta)
     async function finalizarRegistro(event) {
-      event.preventDefault();
+      event.preventDefault(); 
       
       // Detener la voz si Bitto sigue hablando
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
       }
 
-      const nombre = document.getElementById('regNombre').value.trim();
+      // Solo necesitamos el correo para vincular la encuesta con el usuario
       const correo = document.getElementById('regCorreo').value.trim();
-      const empresa = document.getElementById('regEmpresa').value.trim();
       
       let q1 = document.querySelector('input[name="q1"]:checked')?.value;
       let q2 = document.querySelector('input[name="q2"]:checked')?.value;
@@ -583,24 +594,25 @@
       errorEl.innerText = "";
 
       const payload = { 
-          nombre, 
-          correo, 
-          empresa,
+          correo, // Enviamos el correo para cruzar con el registro
           q1_area: q1,
           q2_uso_ia: q2,
           q3_herramienta: q3
       };
+      
+      console.log("Enviando encuesta a Google:", payload);
 
-      const result = await apiCall('guardarRegistro', payload);
+      // Llamamos a la nueva acción 'guardarEncuesta'
+      const result = await apiCall('guardarEncuesta', payload);
 
       if (!result || result.error || result.success === false) {
-        errorEl.innerText = "No se pudo registrar tu ingreso. Intenta de nuevo.";
+        errorEl.innerText = "Error: " + (result?.error || "Revisa el enlace de Apps Script");
         btn.disabled = false;
         btn.innerHTML = "Entrar al Live 🚀";
         return;
       }
 
-      usuarioActual = nombre;
+      // Transición al Live Stream
       document.getElementById('lobby-screen').style.opacity = '0';
       
       setTimeout(() => {
