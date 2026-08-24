@@ -26,7 +26,7 @@
       color: white;
     }
 
-    /* Fondo elegante - Usando tu imagen original satelital */
+    /* Fondo con imagen satelital */
     #lobby-screen {
       position: absolute; top: 0; left: 0;
       width: 100%; height: 100%;
@@ -40,7 +40,7 @@
       overflow-y: auto;
     }
 
-    /* Tarjeta principal */
+    /* Tarjeta principal oscura */
     .lobby-card {
       background: var(--glass-bg);
       backdrop-filter: blur(16px);
@@ -401,14 +401,14 @@
   </div>
 
   <script>
-    // AQUI ESTA TU ENLACE CORRECTO DE GOOGLE
+    // ⚠️ ATENCIÓN: PEGA TU NUEVO ENLACE A CONTINUACIÓN ⚠️
     const API_URL = "https://script.google.com/macros/s/AKfycbzmBBtT-E0LDjmkGQU55rFz6L8bAGPJeBFTj__ahrEqJ5MpzekkgPNjjZ-gYZY1TZNg/exec";
 
     let usuarioActual = "";
     let isChatOpen = false;
     let emojisAnimados = [];
 
-    // LÓGICA DE VOZ DE BITTO (Web Speech API) - Mejorada para voz masculina natural
+    // LÓGICA DE VOZ DE BITTO
     function reproducirVoz(texto, btnId) {
       if (!('speechSynthesis' in window)) return;
       
@@ -466,6 +466,7 @@
       }
     });
 
+    // Control de inputs dinámicos "Otra"
     document.querySelectorAll('input[name="q1"]').forEach(r => r.addEventListener('change', (e) => {
       const inputOtra = document.getElementById('inputOtraArea');
       if (e.target.value === 'Otra') {
@@ -484,7 +485,7 @@
       }
     }));
 
-    // PASO 1 (Solo animación. Los datos se guardan al final en un solo paquete).
+    // TRANSICIÓN DEL PASO 1 AL PASO 2 (Sin enviar datos aún, todo es visual)
     function irPaso2(event) {
       event.preventDefault(); 
       
@@ -494,16 +495,18 @@
       
       if(!nombre || !correo || !empresa) return; 
       
-      usuarioActual = nombre; // Para usar en el chat
+      // Guardamos el nombre para el chat
+      usuarioActual = nombre;
 
       // Detener cualquier voz anterior
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
 
-      // Deslizar al paso 2 de inmediato
+      // Deslizar al paso 2
       document.getElementById('stepContainer').style.transform = 'translateX(-50%)';
       document.getElementById('step1').style.opacity = '0';
       document.getElementById('step2').style.opacity = '1';
 
+      // Iniciar la voz del paso 2 automáticamente medio segundo después
       setTimeout(() => {
         hablarPaso2();
       }, 500);
@@ -533,8 +536,7 @@
         const response = await fetch(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: action, ...data }),
-          redirect: 'follow'
+          body: JSON.stringify({ action: action, ...data })
         });
         const result = await response.json();
         if (result.error) console.error("Error del backend:", result.error);
@@ -546,19 +548,19 @@
       }
     }
 
-    function finalizarRegistro(event) {
+    // ENVÍO FINAL: Aquí es donde empaquetamos el Paso 1 y el Paso 2 juntos
+    async function finalizarRegistro(event) {
       event.preventDefault(); 
       
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
+      // Detener la voz
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
 
-      // 1. Recolectar datos del PASO 1 (Registro)
+      // Recolectar datos del PASO 1
       const nombre = document.getElementById('regNombre').value.trim();
       const correo = document.getElementById('regCorreo').value.trim();
       const empresa = document.getElementById('regEmpresa').value.trim();
       
-      // 2. Recolectar datos del PASO 2 (Encuesta)
+      // Recolectar datos del PASO 2
       let q1 = document.querySelector('input[name="q1"]:checked')?.value;
       let q2 = document.querySelector('input[name="q2"]:checked')?.value;
       let q3 = document.querySelector('input[name="q3"]:checked')?.value;
@@ -574,36 +576,42 @@
          return;
       }
 
-      // Animación de conexión
       btn.disabled = true;
       btn.innerHTML = `<div class="spinner" style="width: 18px; height: 18px; border-width: 2px; margin-bottom: 0;"></div> Conectando...`;
       errorEl.innerText = "";
 
-      // 3. Empaquetar absolutamente todo
+      // EMPAQUETAMOS ABSOLUTAMENTE TODO
       const payload = { 
-          nombre: nombre,
-          correo: correo,
-          empresa: empresa,
+          nombre, 
+          correo, 
+          empresa,
           q1_area: q1,
           q2_uso_ia: q2,
           q3_herramienta: q3
       };
+      
+      console.log("Enviando todo a Google:", payload);
 
-      // 4. Mandamos TODO bajo la acción "guardarRegistro" (Tu script guardará en ambas pestañas)
-      apiCall('guardarRegistro', payload).catch(console.error);
+      // Enviamos el paquete completo
+      const result = await apiCall('guardarRegistro', payload);
 
-      // 5. Dejamos entrar al usuario de inmediato, sin bloquear la pantalla
+      if (!result || result.error || result.success === false) {
+        errorEl.innerText = "Error: " + (result?.error || "Ocurrió un problema de red.");
+        btn.disabled = false;
+        btn.innerHTML = "Entrar al Live 🚀";
+        return;
+      }
+
+      // Éxito: Transición al Live Stream
+      document.getElementById('lobby-screen').style.opacity = '0';
+      
       setTimeout(() => {
-        document.getElementById('lobby-screen').style.opacity = '0';
-        
-        setTimeout(() => {
-          document.getElementById('lobby-screen').style.display = 'none';
-          iniciarChat();
-          if(window.innerWidth > 768) {
-            setTimeout(toggleChat, 1000);
-          }
-        }, 600);
-      }, 500);
+        document.getElementById('lobby-screen').style.display = 'none';
+        iniciarChat();
+        if(window.innerWidth > 768) {
+          setTimeout(toggleChat, 1000);
+        }
+      }, 600);
     }
 
     const cajaMensajes = document.getElementById('cajaMensajes');
