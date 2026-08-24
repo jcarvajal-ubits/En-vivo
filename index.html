@@ -471,7 +471,8 @@
 
     // Control de inputs dinámicos "Otra"
     document.querySelectorAll('input[name="q1"]').forEach(r => r.addEventListener('change', (e) => {
-      const inputOtra = document.getElementById('inputOtraArea');
+    document.querySelectorAll('input[name="q3"]').forEach(r => r.addEventListener('change', (e) => {
+      const inputOtra = document.getElementById('inputOtraHerramienta');
       if (e.target.value === 'Otra') {
         inputOtra.style.display = 'block'; inputOtra.required = true; inputOtra.focus();
       } else {
@@ -479,7 +480,7 @@
       }
     }));
 
-    //    // FUNCION DEL PASO 1 AL PASO 2 (Modificada para guardar registro inmediatamente)
+    // FUNCION DEL PASO 1 (Guarda Inmediatamente en "Registro")
     async function irPaso2(event) {
       event.preventDefault(); 
       
@@ -489,40 +490,91 @@
       
       if(!nombre || !correo || !empresa) return; 
       
-      // Guardar el nombre para el chat de una vez
       usuarioActual = nombre;
 
-      // Cambiar texto del botón a "Cargando..." temporalmente (opcional pero recomendado)
+      // Botón en estado de carga
       const btnPaso1 = event.target.querySelector('button[type="submit"]');
       const btnOriginalText = btnPaso1.innerHTML;
       btnPaso1.innerHTML = 'Guardando...';
       btnPaso1.disabled = true;
 
-      // 1. Enviar datos de registro al backend inmediatamente
-      const result = await apiCall('guardarRegistroBasico', { nombre, correo, empresa });
-      
-      if (!result || result.error || result.success === false) {
-         console.error("Error al guardar registro básico:", result?.error);
-         // Podrías mostrar un mensaje de error o dejar continuar de todos modos
+      try {
+        // 1. Enviar el registro a Google Sheets INMEDIATAMENTE
+        await apiCall('guardarRegistroBasico', { nombre, correo, empresa });
+      } catch(err) {
+        console.error("Error al guardar el paso 1", err);
       }
       
-      // Restaurar botón (por si vuelve atrás, aunque el formulario no está pensado para eso)
+      // Restauramos el botón
       btnPaso1.innerHTML = btnOriginalText;
       btnPaso1.disabled = false;
 
-      // 2. Proceder al Paso 2
-      // Detener cualquier voz anterior
+      // 2. Proceder al Paso 2 (Encuesta)
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
 
-      // Deslizar al paso 2
       document.getElementById('stepContainer').style.transform = 'translateX(-50%)';
       document.getElementById('step1').style.opacity = '0';
       document.getElementById('step2').style.opacity = '1';
 
-      // Iniciar la voz del paso 2 automáticamente medio segundo después
       setTimeout(() => {
         hablarPaso2();
       }, 500);
+    }
+
+    // FUNCION DEL PASO 2 (Guarda solo en "Encuesta")
+    async function finalizarRegistro(event) {
+      event.preventDefault(); 
+      
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+
+      // Tomamos el correo para que sepas de quién es la encuesta
+      const correo = document.getElementById('regCorreo').value.trim();
+      
+      let q1 = document.querySelector('input[name="q1"]:checked')?.value;
+      let q2 = document.querySelector('input[name="q2"]:checked')?.value;
+      let q3 = document.querySelector('input[name="q3"]:checked')?.value;
+
+      if (q1 === 'Otra') q1 = document.getElementById('inputOtraArea').value.trim();
+      if (q3 === 'Otra') q3 = document.getElementById('inputOtraHerramienta').value.trim();
+
+      const btn = document.getElementById('btnEntrarFinal');
+      const errorEl = document.getElementById('formError');
+
+      if (!q1 || !q2 || !q3) {
+         errorEl.innerText = "Por favor responde todas las preguntas para continuar.";
+         return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = `<div class="spinner" style="width: 18px; height: 18px; border-width: 2px; margin-bottom: 0;"></div> Conectando...`;
+      errorEl.innerText = "";
+
+      const payload = { 
+          correo, // Vincula las respuestas con el usuario del paso 1
+          q1_area: q1,
+          q2_uso_ia: q2,
+          q3_herramienta: q3
+      };
+      
+      try {
+        // Enviar solo la encuesta a la pestaña "Encuesta"
+        await apiCall('guardarEncuesta', payload);
+      } catch(err) {
+        console.error("Error en la encuesta", err);
+      }
+
+      // Transición al Live
+      document.getElementById('lobby-screen').style.opacity = '0';
+      
+      setTimeout(() => {
+        document.getElementById('lobby-screen').style.display = 'none';
+        iniciarChat();
+        if(window.innerWidth > 768) {
+          setTimeout(toggleChat, 1000);
+        }
+      }, 600);
     }
 
     function toggleChat() {
