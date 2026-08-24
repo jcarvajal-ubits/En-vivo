@@ -26,7 +26,7 @@
       color: white;
     }
 
-    /* Fondo elegante - Usando tu imagen original */
+    /* Fondo elegante - Usando tu imagen original satelital */
     #lobby-screen {
       position: absolute; top: 0; left: 0;
       width: 100%; height: 100%;
@@ -249,7 +249,6 @@
     <div class="lobby-card">
       <div style="text-align: center;">
         <div style="display:inline-block; padding: 10px 25px; background: rgba(0,0,0,0.4); border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.05);">
-            <!-- Cambiada la ruta al logo que subiste a GitHub -->
             <img src="UBITS Logotipo Blanco.png" alt="UBITS" class="lobby-logo" style="margin-bottom: 0; width: 100px; filter: none;" onerror="this.src='https://placehold.co/130x40/04101f/ffffff?text=UBITS'">
         </div>
         <br>
@@ -286,7 +285,6 @@
           <!-- PASO 2: Encuesta IA FIRST -->
           <div class="form-step" id="step2">
             <div class="bitto-greeting">
-              <!-- Cambiada la ruta a la imagen de Bitto que subiste a GitHub -->
               <img src="Bitto saludando (1).png" alt="Bitto" class="bitto-icon-img" onerror="this.src='https://placehold.co/70x70/1a6bff/ffffff?text=🦊'">
               <div class="bitto-text">¡Excelente! Ahora ayúdame a conocerte mejor respondiendo 3 breves preguntas.</div>
               <button type="button" class="btn-voice" id="btnVoice2" onclick="hablarPaso2()" title="Escuchar a Bitto">
@@ -403,7 +401,7 @@
   </div>
 
   <script>
-    // AQUI COLOCAS TU URL DE GOOGLE APPS SCRIPT
+    // AQUI ESTA TU ENLACE CORRECTO DE GOOGLE
     const API_URL = "https://script.google.com/macros/s/AKfycbzmBBtT-E0LDjmkGQU55rFz6L8bAGPJeBFTj__ahrEqJ5MpzekkgPNjjZ-gYZY1TZNg/exec";
 
     let usuarioActual = "";
@@ -417,7 +415,6 @@
       const synth = window.speechSynthesis;
       const btn = document.getElementById(btnId);
       
-      // Si ya está hablando, lo detenemos
       if (synth.speaking) {
         synth.cancel();
         document.querySelectorAll('.btn-voice').forEach(b => b.classList.remove('talking'));
@@ -439,8 +436,8 @@
       }
 
       utterThis.lang = 'es-CO';
-      utterThis.pitch = 0.95; // Tono natural, un poco más relajado
-      utterThis.rate = 0.82; // Velocidad pausada para sonar muy amable, humano y cercano
+      utterThis.pitch = 0.95; 
+      utterThis.rate = 0.82; 
       
       utterThis.onstart = () => {
         document.querySelectorAll('.btn-voice').forEach(b => b.classList.remove('talking'));
@@ -469,7 +466,6 @@
       }
     });
 
-    // Control de inputs dinámicos "Otra"
     document.querySelectorAll('input[name="q1"]').forEach(r => r.addEventListener('change', (e) => {
       const inputOtra = document.getElementById('inputOtraArea');
       if (e.target.value === 'Otra') {
@@ -479,8 +475,17 @@
       }
     }));
 
-    //    // FUNCION DEL PASO 1 AL PASO 2 (Modificada para guardar registro inmediatamente)
-    async function irPaso2(event) {
+    document.querySelectorAll('input[name="q3"]').forEach(r => r.addEventListener('change', (e) => {
+      const inputOtra = document.getElementById('inputOtraHerramienta');
+      if (e.target.value === 'Otra') {
+        inputOtra.style.display = 'block'; inputOtra.required = true; inputOtra.focus();
+      } else {
+        inputOtra.style.display = 'none'; inputOtra.required = false; inputOtra.value = '';
+      }
+    }));
+
+    // PASO 1 (Solo animación. Los datos se guardan al final en un solo paquete).
+    function irPaso2(event) {
       event.preventDefault(); 
       
       const nombre = document.getElementById('regNombre').value.trim();
@@ -489,37 +494,16 @@
       
       if(!nombre || !correo || !empresa) return; 
       
-      // Guardar el nombre para el chat de una vez
-      usuarioActual = nombre;
+      usuarioActual = nombre; // Para usar en el chat
 
-      // Cambiar texto del botón a "Cargando..." temporalmente (opcional pero recomendado)
-      const btnPaso1 = event.target.querySelector('button[type="submit"]');
-      const btnOriginalText = btnPaso1.innerHTML;
-      btnPaso1.innerHTML = 'Guardando...';
-      btnPaso1.disabled = true;
-
-      // 1. Enviar datos de registro al backend inmediatamente
-      const result = await apiCall('guardarRegistroBasico', { nombre, correo, empresa });
-      
-      if (!result || result.error || result.success === false) {
-         console.error("Error al guardar registro básico:", result?.error);
-         // Podrías mostrar un mensaje de error o dejar continuar de todos modos
-      }
-      
-      // Restaurar botón (por si vuelve atrás, aunque el formulario no está pensado para eso)
-      btnPaso1.innerHTML = btnOriginalText;
-      btnPaso1.disabled = false;
-
-      // 2. Proceder al Paso 2
       // Detener cualquier voz anterior
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
 
-      // Deslizar al paso 2
+      // Deslizar al paso 2 de inmediato
       document.getElementById('stepContainer').style.transform = 'translateX(-50%)';
       document.getElementById('step1').style.opacity = '0';
       document.getElementById('step2').style.opacity = '1';
 
-      // Iniciar la voz del paso 2 automáticamente medio segundo después
       setTimeout(() => {
         hablarPaso2();
       }, 500);
@@ -562,18 +546,19 @@
       }
     }
 
-    //    // FUNCION DE ENVÍO FINAL A GOOGLE SHEETS (Modificada para enviar solo encuesta)
-    async function finalizarRegistro(event) {
+    function finalizarRegistro(event) {
       event.preventDefault(); 
       
-      // Detener la voz si Bitto sigue hablando
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
       }
 
-      // Solo necesitamos el correo para vincular la encuesta con el usuario
+      // 1. Recolectar datos del PASO 1 (Registro)
+      const nombre = document.getElementById('regNombre').value.trim();
       const correo = document.getElementById('regCorreo').value.trim();
+      const empresa = document.getElementById('regEmpresa').value.trim();
       
+      // 2. Recolectar datos del PASO 2 (Encuesta)
       let q1 = document.querySelector('input[name="q1"]:checked')?.value;
       let q2 = document.querySelector('input[name="q2"]:checked')?.value;
       let q3 = document.querySelector('input[name="q3"]:checked')?.value;
@@ -589,39 +574,36 @@
          return;
       }
 
+      // Animación de conexión
       btn.disabled = true;
       btn.innerHTML = `<div class="spinner" style="width: 18px; height: 18px; border-width: 2px; margin-bottom: 0;"></div> Conectando...`;
       errorEl.innerText = "";
 
+      // 3. Empaquetar absolutamente todo
       const payload = { 
-          correo, // Enviamos el correo para cruzar con el registro
+          nombre: nombre,
+          correo: correo,
+          empresa: empresa,
           q1_area: q1,
           q2_uso_ia: q2,
           q3_herramienta: q3
       };
-      
-      console.log("Enviando encuesta a Google:", payload);
 
-      // Llamamos a la nueva acción 'guardarEncuesta'
-      const result = await apiCall('guardarEncuesta', payload);
+      // 4. Mandamos TODO bajo la acción "guardarRegistro" (Tu script guardará en ambas pestañas)
+      apiCall('guardarRegistro', payload).catch(console.error);
 
-      if (!result || result.error || result.success === false) {
-        errorEl.innerText = "Error: " + (result?.error || "Revisa el enlace de Apps Script");
-        btn.disabled = false;
-        btn.innerHTML = "Entrar al Live 🚀";
-        return;
-      }
-
-      // Transición al Live Stream
-      document.getElementById('lobby-screen').style.opacity = '0';
-      
+      // 5. Dejamos entrar al usuario de inmediato, sin bloquear la pantalla
       setTimeout(() => {
-        document.getElementById('lobby-screen').style.display = 'none';
-        iniciarChat();
-        if(window.innerWidth > 768) {
-          setTimeout(toggleChat, 1000);
-        }
-      }, 600);
+        document.getElementById('lobby-screen').style.opacity = '0';
+        
+        setTimeout(() => {
+          document.getElementById('lobby-screen').style.display = 'none';
+          iniciarChat();
+          if(window.innerWidth > 768) {
+            setTimeout(toggleChat, 1000);
+          }
+        }, 600);
+      }, 500);
     }
 
     const cajaMensajes = document.getElementById('cajaMensajes');
