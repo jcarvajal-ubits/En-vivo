@@ -21,7 +21,8 @@
       margin: 0; padding: 0;
       height: 100vh; width: 100vw;
       font-family: 'Inter', sans-serif;
-      overflow: hidden;
+      overflow-y: auto; /* CAMBIO: Permite scroll vertical si el iframe es muy pequeño */
+      overflow-x: hidden;
       background-color: var(--bg-dark);
       color: white;
     }
@@ -29,7 +30,7 @@
     /* Fondo elegante - Usando tu imagen original pero más clara */
     #lobby-screen {
       position: absolute; top: 0; left: 0;
-      width: 100%; height: 100%;
+      width: 100%; min-height: 100%; /* CAMBIO: min-height permite que crezca si hay scroll */
       background: 
         linear-gradient(135deg, rgba(4, 16, 31, 0.60) 0%, rgba(2, 8, 18, 0.85) 100%),
         url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop') center/cover no-repeat;
@@ -233,6 +234,23 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes pulseText { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
 
+    /* COMPRESIÓN VERTICAL PARA IFRAMES CORTOS (Plataforma UBITS) */
+    @media (max-height: 680px) {
+      #lobby-screen { padding: 10px; justify-content: flex-start; }
+      .lobby-card { padding: 20px 25px; border-radius: 18px; margin-top: 10px; }
+      .lobby-logo { width: 90px; margin-bottom: 10px; }
+      .pill-badge { margin-bottom: 12px; padding: 4px 14px; }
+      .lobby-title { font-size: 20px; margin-bottom: 5px; }
+      .lobby-subtitle { font-size: 13px; margin-bottom: 15px; }
+      .form-group { margin-bottom: 10px; }
+      .form-group label { margin-bottom: 4px; }
+      .form-group input[type="text"], .form-group input[type="email"] { padding: 10px 12px; font-size: 14px; }
+      .btn-submit { padding: 12px; margin-top: 5px; font-size: 14px; }
+      .bitto-greeting { padding: 10px; margin-bottom: 15px; gap: 10px; }
+      .bitto-icon-img { width: 45px; height: 45px; }
+      .survey-options label { padding: 7px 11px; }
+    }
+
     @media (max-width: 768px) {
       .lobby-card { padding: 25px 20px; border-radius: 20px; margin: 10px; }
       #live-screen { padding: 8px; }
@@ -356,7 +374,7 @@
 
         <iframe
           id="vimeoplayer"
-          src=""
+          src="https://vimeo.com/event/6043961/embed"
           frameborder="0"
           allow="autoplay; fullscreen; picture-in-picture; encrypted-media; web-share"
           referrerpolicy="strict-origin-when-cross-origin"
@@ -405,6 +423,7 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbxYtUZ_idI5eAPMTM4mdQqfMbc8Mfc5pI0hBO6xU4sifzBUR8knoK4mTvJDy6YaUvTN/exec";
 
     let usuarioActual = "";
+    let correoActual = ""; // NUEVO: Guardamos el correo para rastrear la salida
     let isChatOpen = false;
     let emojisAnimados = [];
 
@@ -450,7 +469,7 @@
     }
 
     function hablarPaso2() {
-      const texto = "¡Hola y bienvenido a este lanzamiento especial de iúbits! Para mejorar tu experiencia, ayúdanos respondiendo las breves preguntas en pantalla. Al terminar, haz clic en 'entrar al live'. ¡Nos vemos adentro!";
+      const texto = "¡Hola! Qué gran emoción tenerte aquí. ... Muchísimas gracias por registrarte. ... Te doy la bienvenida oficial a este lanzamiento tan especial. ... Prepárate para descubrir cómo estamos revolucionando el futuro del talento en iúbits. ... Para que tu experiencia de hoy sea increíble, me encantaría conocerte un poquito mejor. ... Solo te tomará unos segundos. ... Primera pregunta... ¿A qué área de tu empresa perteneces? ... Segunda pregunta... Cuéntame, ¿qué tan seguido usas herramientas de inteligencia artificial en tu día a día? ... Y tercera, y última pregunta... ¿Cuál de estas herramientas has usado recientemente? ... Es muy fácil. ... Al finalizar, dale clic en entrar al live, y disfruta de esta sesión. ... ¡Nos vemos adentro!";
       reproducirVoz(texto, 'btnVoice2');
     }
 
@@ -458,14 +477,11 @@
       window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
     }
 
-    // AJUSTE: Validar que el iframe tenga src de Vimeo para quitar el loader
     document.getElementById('vimeoplayer').addEventListener('load', function() {
-      if (this.src && this.src.includes('vimeo')) {
-        const loader = document.getElementById('video-loader');
-        if (loader) {
-          loader.style.opacity = '0';
-          setTimeout(() => loader.style.display = 'none', 600);
-        }
+      const loader = document.getElementById('video-loader');
+      if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.style.display = 'none', 600);
       }
     });
 
@@ -498,8 +514,9 @@
       
       if(!nombre || !correo || !empresa) return; 
       
-      // Guardamos el nombre para el chat
+      // Guardamos el nombre y correo para el chat y la desconexión
       usuarioActual = nombre;
+      correoActual = correo;
 
       // Detener cualquier voz anterior
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
@@ -608,9 +625,6 @@
       // Éxito: Transición al Live Stream
       document.getElementById('lobby-screen').style.opacity = '0';
       
-      // AJUSTE: INYECTAR EL VIDEO AQUÍ CON AUTOPLAY ACTIVADO
-      document.getElementById('vimeoplayer').src = "https://vimeo.com/event/6043961/embed?autoplay=1";
-      
       setTimeout(() => {
         document.getElementById('lobby-screen').style.display = 'none';
         iniciarChat();
@@ -695,6 +709,19 @@
       pedirDatos();
       setInterval(pedirDatos, 3500);
     }
+
+    // --- NUEVO: AVISAR CUANDO EL USUARIO SE DESCONECTA ---
+    window.addEventListener('beforeunload', function() {
+      // Solo avisamos si el usuario logró pasar el lobby
+      if (correoActual !== "" && document.getElementById('lobby-screen').style.display === 'none') {
+        const payload = JSON.stringify({
+          action: 'desconexion',
+          correo: correoActual // Buscamos por correo en tu Excel
+        });
+        navigator.sendBeacon(API_URL, payload);
+      }
+    });
+
   </script>
 </body>
 </html>
