@@ -42,9 +42,35 @@ function mostrarCountdown() {
   if (loader) loader.style.display = 'none';
   if (countdown) countdown.style.display = 'flex';
 
+  resaltarHorarioLocal();
   actualizarCountdown();
   if (intervaloCountdown) clearInterval(intervaloCountdown);
   intervaloCountdown = setInterval(actualizarCountdown, 1000);
+}
+
+// Detecta el huso horario del navegador del visitante y resalta la fila
+// de la tabla que le corresponde (sin pedir permisos ni ubicación exacta:
+// se basa en el offset UTC que el propio navegador ya expone).
+function resaltarHorarioLocal() {
+  const filas = document.querySelectorAll('.schedule-row');
+
+  // getTimezoneOffset() da minutos "detrás" de UTC (positivo si vas atrás),
+  // por eso se invierte el signo para obtener el offset real (ej. Colombia = -5)
+  const offsetHoras = -new Date().getTimezoneOffset() / 60;
+
+  // Offsets disponibles en la tabla del evento
+  const offsetsDisponibles = [-6, -5, -4, -3];
+
+  // Se busca el offset más cercano al del visitante (por si su país no está
+  // en la lista pero comparte huso horario con alguno que sí lo está)
+  const offsetMasCercano = offsetsDisponibles.reduce((mejor, actual) =>
+    Math.abs(actual - offsetHoras) < Math.abs(mejor - offsetHoras) ? actual : mejor
+  );
+
+  filas.forEach(fila => {
+    const esCoincidencia = parseInt(fila.dataset.utcOffset, 10) === offsetMasCercano;
+    fila.classList.toggle('active', esCoincidencia);
+  });
 }
 
 function actualizarCountdown() {
