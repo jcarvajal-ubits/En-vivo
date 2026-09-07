@@ -122,8 +122,8 @@ async function finalizarRegistro(event) {
   // Animación de salida de la pantalla de lobby
   document.getElementById('lobby-screen').style.opacity = '0';
 
-  // Inyección del origen final en el iframe con reproducción activada
-  document.getElementById('vimeoplayer').src = "https://vimeo.com/event/6043961/embed?autoplay=1";
+  // Muestra el video si ya es la hora, o la cuenta regresiva si aún no llega
+  iniciarTransmision();
 
   setTimeout(() => {
     document.getElementById('lobby-screen').style.display = 'none';
