@@ -110,6 +110,7 @@
 
         <!-- Pantalla de cuenta regresiva: se muestra si el usuario entra antes de la hora de inicio -->
         <div id="countdown-screen">
+          <div class="countdown-badge">🔴 EN VIVO PRONTO</div>
           <div class="countdown-label">La transmisión comienza en</div>
           <div class="countdown-timer">
             <div class="countdown-unit"><span id="cdHoras">00</span><small>Horas</small></div>
@@ -117,6 +118,16 @@
             <div class="countdown-unit"><span id="cdMinutos">00</span><small>Min</small></div>
             <div class="countdown-sep">:</div>
             <div class="countdown-unit"><span id="cdSegundos">00</span><small>Seg</small></div>
+          </div>
+
+          <div class="countdown-schedule">
+            <div class="schedule-title">🕐 Hora de inicio según tu país</div>
+            <div class="schedule-grid">
+              <div class="schedule-row"><span class="schedule-time">9:00 AM</span><span class="schedule-countries">MEX, GUA, SAL, HON, CR, NIC</span></div>
+              <div class="schedule-row active"><span class="schedule-time">10:00 AM</span><span class="schedule-countries">COL, PER, ECU, PAN</span></div>
+              <div class="schedule-row"><span class="schedule-time">11:00 AM</span><span class="schedule-countries">DOM, PR, BOL, CHI</span></div>
+              <div class="schedule-row"><span class="schedule-time">12:00 PM</span><span class="schedule-countries">ARG, URU, PA</span></div>
+            </div>
           </div>
         </div>
 
