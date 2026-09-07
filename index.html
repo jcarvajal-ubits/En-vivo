@@ -108,6 +108,18 @@
           <div class="loader-text">Inicializando transmisión...</div>
         </div>
 
+        <!-- Pantalla de cuenta regresiva: se muestra si el usuario entra antes de la hora de inicio -->
+        <div id="countdown-screen">
+          <div class="countdown-label">La transmisión comienza en</div>
+          <div class="countdown-timer">
+            <div class="countdown-unit"><span id="cdHoras">00</span><small>Horas</small></div>
+            <div class="countdown-sep">:</div>
+            <div class="countdown-unit"><span id="cdMinutos">00</span><small>Min</small></div>
+            <div class="countdown-sep">:</div>
+            <div class="countdown-unit"><span id="cdSegundos">00</span><small>Seg</small></div>
+          </div>
+        </div>
+
         <!-- Se inicializa vacío para evitar la carga en segundo plano y forzar el autoplay posteriormente -->
         <iframe
           id="vimeoplayer"
