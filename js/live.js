@@ -5,6 +5,8 @@
 const cajaMensajes = document.getElementById('cajaMensajes');
 const inputMensaje = document.getElementById('inputMensaje');
 
+let intervaloCountdown = null;
+
 // Remueve la pantalla de carga cuando el componente de video notifica su renderización
 document.getElementById('vimeoplayer').addEventListener('load', function() {
   if (this.src && this.src.includes('vimeo')) {
@@ -15,6 +17,53 @@ document.getElementById('vimeoplayer').addEventListener('load', function() {
     }
   }
 });
+
+// Decide si hay que mostrar el video ya o la sala de espera con cuenta regresiva
+function iniciarTransmision() {
+  const ahora = new Date();
+  if (ahora >= EVENT_START_TIME) {
+    cargarVideo();
+  } else {
+    mostrarCountdown();
+  }
+}
+
+// Inyecta el enlace de Vimeo en el iframe (dispara el evento 'load' de arriba)
+function cargarVideo() {
+  const countdown = document.getElementById('countdown-screen');
+  if (countdown) countdown.style.display = 'none';
+  document.getElementById('vimeoplayer').src = VIMEO_EMBED_URL;
+}
+
+// Muestra la sala de espera y actualiza el reloj cada segundo
+function mostrarCountdown() {
+  const loader = document.getElementById('video-loader');
+  const countdown = document.getElementById('countdown-screen');
+  if (loader) loader.style.display = 'none';
+  if (countdown) countdown.style.display = 'flex';
+
+  actualizarCountdown();
+  if (intervaloCountdown) clearInterval(intervaloCountdown);
+  intervaloCountdown = setInterval(actualizarCountdown, 1000);
+}
+
+function actualizarCountdown() {
+  const restante = EVENT_START_TIME - new Date();
+
+  if (restante <= 0) {
+    clearInterval(intervaloCountdown);
+    cargarVideo();
+    return;
+  }
+
+  const horas = Math.floor(restante / 3600000);
+  const minutos = Math.floor((restante % 3600000) / 60000);
+  const segundos = Math.floor((restante % 60000) / 1000);
+
+  document.getElementById('cdHoras').innerText = String(horas).padStart(2, '0');
+  document.getElementById('cdMinutos').innerText = String(minutos).padStart(2, '0');
+  document.getElementById('cdSegundos').innerText = String(segundos).padStart(2, '0');
+}
 
 function toggleChat() {
   const sidebar = document.getElementById('chat-sidebar');
