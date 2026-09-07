@@ -1,138 +1,169 @@
 /* ===========================================================
-   LOBBY — flujo del formulario: paso 1 (registro) y paso 2 (encuesta)
+   LIVE — reproductor de video, chat en vivo y reacciones
    =========================================================== */
 
-let pasoActivo = 'step1';
+const cajaMensajes = document.getElementById('cajaMensajes');
+const inputMensaje = document.getElementById('inputMensaje');
 
-// Ajusta la altura del contenedor deslizante al contenido del paso activo,
-// para que no quede espacio en blanco cuando un paso es más corto que el otro.
-function ajustarAlturaWrapper() {
-  const wrapper = document.getElementById('stepWrapper');
-  const paso = document.getElementById(pasoActivo);
-  if (wrapper && paso) {
-    wrapper.style.height = paso.scrollHeight + 'px';
-  }
-}
+let intervaloCountdown = null;
 
-window.addEventListener('resize', ajustarAlturaWrapper);
-
-// Recalcula la altura una vez que la tipografía Inter termina de cargar
-// (si se mide antes, con la fuente de reemplazo, el resultado puede quedar
-// un poco corto y cortar el botón).
-if (document.fonts && document.fonts.ready) {
-  document.fonts.ready.then(ajustarAlturaWrapper);
-}
-window.addEventListener('load', ajustarAlturaWrapper);
-
-// Despliegue condicional de los campos adicionales de los formularios
-document.querySelectorAll('input[name="q1"]').forEach(r => r.addEventListener('change', (e) => {
-  const inputOtra = document.getElementById('inputOtraArea');
-  if (e.target.value === 'Otra') {
-    inputOtra.style.display = 'block'; inputOtra.required = true; inputOtra.focus();
-  } else {
-    inputOtra.style.display = 'none'; inputOtra.required = false; inputOtra.value = '';
-  }
-  ajustarAlturaWrapper();
-}));
-
-document.querySelectorAll('input[name="q3"]').forEach(r => r.addEventListener('change', (e) => {
-  const inputOtra = document.getElementById('inputOtraHerramienta');
-  if (e.target.value === 'Otra') {
-    inputOtra.style.display = 'block'; inputOtra.required = true; inputOtra.focus();
-  } else {
-    inputOtra.style.display = 'none'; inputOtra.required = false; inputOtra.value = '';
-  }
-  ajustarAlturaWrapper();
-}));
-
-// Controla la transición de interfaz del primer bloque de datos al segundo
-function irPaso2(event) {
-  event.preventDefault();
-
-  const nombre = document.getElementById('regNombre').value.trim();
-  const correo = document.getElementById('regCorreo').value.trim();
-  const empresa = document.getElementById('regEmpresa').value.trim();
-
-  if (!nombre || !correo || !empresa) return;
-
-  usuarioActual = nombre;
-  correoActual = correo;
-
-  // Transición animada de pantalla
-  document.getElementById('stepContainer').style.transform = 'translateX(-50%)';
-  document.getElementById('step1').style.opacity = '0';
-  document.getElementById('step1').style.pointerEvents = 'none';
-  document.getElementById('step2').style.opacity = '1';
-  document.getElementById('step2').style.pointerEvents = 'auto';
-  pasoActivo = 'step2';
-  ajustarAlturaWrapper();
-}
-
-// Gestiona la unificación, empaquetado y envío de toda la data del registro al finalizar
-async function finalizarRegistro(event) {
-  event.preventDefault();
-
-  // Recolección de variables del bloque inicial
-  const nombre = document.getElementById('regNombre').value.trim();
-  const correo = document.getElementById('regCorreo').value.trim();
-  const empresa = document.getElementById('regEmpresa').value.trim();
-
-  // Recolección de variables del bloque secundario
-  let q1 = document.querySelector('input[name="q1"]:checked')?.value;
-  let q2 = document.querySelector('input[name="q2"]:checked')?.value;
-  let q3 = document.querySelector('input[name="q3"]:checked')?.value;
-
-  if (q1 === 'Otra') q1 = document.getElementById('inputOtraArea').value.trim();
-  if (q3 === 'Otra') q3 = document.getElementById('inputOtraHerramienta').value.trim();
-
-  const btn = document.getElementById('btnEntrarFinal');
-  const errorEl = document.getElementById('formError');
-
-  if (!q1 || !q2 || !q3) {
-    errorEl.innerText = "Por favor responde todas las preguntas para continuar.";
-    return;
-  }
-
-  btn.disabled = true;
-  btn.innerHTML = `<div class="spinner" style="width: 18px; height: 18px; border-width: 2px; margin-bottom: 0;"></div> Conectando...`;
-  errorEl.innerText = "";
-
-  // Generación del objeto global para transmisión
-  const payload = {
-    nombre,
-    correo,
-    empresa,
-    q1_area: q1,
-    q2_uso_ia: q2,
-    q3_herramienta: q3
-  };
-
-  console.log("Enviando todo a Google:", payload);
-
-  // Ejecución hacia el backend
-  const result = await apiCall('guardarRegistro', payload);
-
-  if (!result || result.error || result.success === false) {
-    errorEl.innerText = "Error: " + (result?.error || "Ocurrió un problema de red.");
-    btn.disabled = false;
-    btn.innerHTML = "Entrar al Live 🚀";
-    return;
-  }
-
-  // Animación de salida de la pantalla de lobby
-  document.getElementById('lobby-screen').style.opacity = '0';
-
-  // Muestra el video si ya es la hora, o la cuenta regresiva si aún no llega
-  iniciarTransmision();
-
-  setTimeout(() => {
-    document.getElementById('lobby-screen').style.display = 'none';
-    iniciarChat();
-    if (window.innerWidth > 768) {
-      setTimeout(toggleChat, 1000);
+// Remueve la pantalla de carga cuando el componente de video notifica su renderización
+document.getElementById('vimeoplayer').addEventListener('load', function() {
+  if (this.src && this.src.includes('vimeo')) {
+    const loader = document.getElementById('video-loader');
+    if (loader) {
+      loader.style.opacity = '0';
+      setTimeout(() => loader.style.display = 'none', 600);
     }
-  }, 600);
+  }
+});
+
+// Decide si hay que mostrar el video ya o la sala de espera con cuenta regresiva
+function iniciarTransmision() {
+  const ahora = new Date();
+  if (ahora >= EVENT_START_TIME) {
+    cargarVideo();
+  } else {
+    mostrarCountdown();
+  }
 }
 
-// Altura inicial del wrapper (paso 1 activo por defecto)
-ajustarAlturaWrapper();
+// Inyecta el enlace de Vimeo en el iframe (dispara el evento 'load' de arriba)
+function cargarVideo() {
+  const countdown = document.getElementById('countdown-screen');
+  if (countdown) countdown.style.display = 'none';
+  document.getElementById('vimeoplayer').src = VIMEO_EMBED_URL;
+}
+
+// Muestra la sala de espera y actualiza el reloj cada segundo
+function mostrarCountdown() {
+  const loader = document.getElementById('video-loader');
+  const countdown = document.getElementById('countdown-screen');
+  if (loader) loader.style.display = 'none';
+  if (countdown) countdown.style.display = 'flex';
+
+  actualizarCountdown();
+  if (intervaloCountdown) clearInterval(intervaloCountdown);
+  intervaloCountdown = setInterval(actualizarCountdown, 1000);
+}
+
+function actualizarCountdown() {
+  const restante = EVENT_START_TIME - new Date();
+
+  if (restante <= 0) {
+    clearInterval(intervaloCountdown);
+    cargarVideo();
+    return;
+  }
+
+  const horas = Math.floor(restante / 3600000);
+  const minutos = Math.floor((restante % 3600000) / 60000);
+  const segundos = Math.floor((restante % 60000) / 1000);
+
+  document.getElementById('cdHoras').innerText = String(horas).padStart(2, '0');
+  document.getElementById('cdMinutos').innerText = String(minutos).padStart(2, '0');
+  document.getElementById('cdSegundos').innerText = String(segundos).padStart(2, '0');
+}
+
+function toggleChat() {
+  const sidebar = document.getElementById('chat-sidebar');
+  const btn = document.getElementById('btnToggleChat');
+  const videoSec = document.getElementById('videoSection');
+
+  isChatOpen = !isChatOpen;
+  if (isChatOpen) {
+    sidebar.style.display = 'flex';
+    btn.style.display = 'none';
+    if (window.innerWidth > 768) {
+      videoSec.style.width = 'calc(100% - 355px)';
+    }
+  } else {
+    sidebar.style.display = 'none';
+    btn.style.display = 'flex';
+    videoSec.style.width = '100%';
+  }
+}
+
+function procesarDatos(datos) {
+  if (!datos) return;
+
+  const esNuevoChat = cajaMensajes.dataset.ultimoMensaje !== JSON.stringify(datos.mensajes);
+  if (esNuevoChat) {
+    const bienvenidaHTML = `
+      <div class="mensaje">
+        <div class="usuario">🦊 Bitto <span class="hora">Fijado</span></div>
+        <div class="texto">¡Bienvenidos al lanzamiento oficial de la app! Prepárense para descubrir el futuro del talento. 🚀</div>
+      </div>`;
+
+    cajaMensajes.innerHTML = bienvenidaHTML;
+
+    datos.mensajes.forEach(msg => {
+      const div = document.createElement('div');
+      div.className = 'mensaje';
+      div.innerHTML = `<div class="usuario">${escapeHtml(msg.nombre)} <span class="hora">${escapeHtml(msg.hora)}</span></div><div class="texto">${escapeHtml(msg.texto)}</div>`;
+      cajaMensajes.appendChild(div);
+    });
+    cajaMensajes.scrollTop = cajaMensajes.scrollHeight;
+    cajaMensajes.dataset.ultimoMensaje = JSON.stringify(datos.mensajes);
+  }
+
+  datos.reacciones.forEach(reacc => {
+    if (!emojisAnimados.includes(reacc.id)) {
+      crearEmojiFlotante(reacc.emoji);
+      emojisAnimados.push(reacc.id);
+    }
+  });
+  if (emojisAnimados.length > 100) emojisAnimados = emojisAnimados.slice(-50);
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.innerText = str;
+  return div.innerHTML;
+}
+
+function pedirDatos() {
+  apiCall('getDatos');
+}
+
+function enviar() {
+  const texto = inputMensaje.value.trim();
+  if (!texto) return;
+  inputMensaje.value = '';
+  apiCall('guardarMensaje', { nombre: usuarioActual, texto: texto });
+}
+
+function enviarReaccion(emoji) {
+  crearEmojiFlotante(emoji);
+  apiCall('guardarReaccion', { emoji: emoji });
+}
+
+function crearEmojiFlotante(emoji) {
+  const el = document.createElement('div');
+  el.className = 'floating-emoji';
+  el.innerText = emoji;
+  const randomLeftOffset = Math.random() * 80 - 40;
+  el.style.transform = `translateX(${randomLeftOffset}px)`;
+  document.body.appendChild(el);
+  setTimeout(() => { el.remove(); }, 2500);
+}
+
+inputMensaje.addEventListener("keypress", function(event) {
+  if (event.key === "Enter") { event.preventDefault(); enviar(); }
+});
+
+function iniciarChat() {
+  pedirDatos();
+  setInterval(pedirDatos, 3500);
+}
+
+// Registra y envía el evento de abandono de sesión
+window.addEventListener('beforeunload', function() {
+  if (correoActual !== "" && document.getElementById('lobby-screen').style.display === 'none') {
+    const payload = JSON.stringify({
+      action: 'desconexion',
+      correo: correoActual
+    });
+    navigator.sendBeacon(API_URL, payload);
+  }
+});
