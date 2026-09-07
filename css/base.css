@@ -1,0 +1,27 @@
+/* ===========================================================
+   BASE — variables de marca, reset y estilos globales
+   =========================================================== */
+
+:root {
+  --bg-dark: #04101f;
+  --blue-primary: #1a6bff;
+  --blue-cyan: #2ec6ff;
+  --blue-light: #cadeff;
+  --ai-pink: #eb056f;
+  --ai-orange: #ff5416;
+  --glass-bg: rgba(4, 16, 31, 0.85);
+  --glass-border: rgba(46, 198, 255, 0.15);
+}
+
+body {
+  margin: 0; padding: 0;
+  height: 100vh; width: 100vw;
+  font-family: 'Inter', sans-serif;
+  overflow-y: auto; /* Permite scroll vertical si el contenido excede el alto */
+  overflow-x: hidden;
+  background-color: var(--bg-dark);
+  color: white;
+}
+
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+@keyframes spin { to { transform: rotate(360deg); } }
