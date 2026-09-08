@@ -35,13 +35,27 @@ document.querySelectorAll('input[name="q1"]').forEach(r => r.addEventListener('c
   ajustarAlturaWrapper();
 }));
 
-document.querySelectorAll('input[name="q3"]').forEach(r => r.addEventListener('change', (e) => {
-  const inputOtra = document.getElementById('inputOtraHerramienta');
-  if (e.target.value === 'Otra') {
-    inputOtra.style.display = 'block'; inputOtra.required = true; inputOtra.focus();
-  } else {
-    inputOtra.style.display = 'none'; inputOtra.required = false; inputOtra.value = '';
+// Pregunta 3: ahora permite elegir varias herramientas (checkboxes) en vez de una sola.
+const checkboxesQ3 = document.querySelectorAll('input[name="q3"]');
+const checkboxNinguna = document.getElementById('c5');
+const checkboxOtra = document.getElementById('c6');
+const inputOtraHerramienta = document.getElementById('inputOtraHerramienta');
+
+checkboxesQ3.forEach(cb => cb.addEventListener('change', (e) => {
+  // "Ninguna" es excluyente: si se marca, se desmarca todo lo demás.
+  if (e.target === checkboxNinguna && e.target.checked) {
+    checkboxesQ3.forEach(otro => { if (otro !== checkboxNinguna) otro.checked = false; });
+  } else if (e.target.checked) {
+    checkboxNinguna.checked = false;
   }
+
+  // Muestra/oculta el campo de texto libre según el estado actual de "Otra"
+  if (checkboxOtra.checked) {
+    inputOtraHerramienta.style.display = 'block'; inputOtraHerramienta.required = true; inputOtraHerramienta.focus();
+  } else {
+    inputOtraHerramienta.style.display = 'none'; inputOtraHerramienta.required = false; inputOtraHerramienta.value = '';
+  }
+
   ajustarAlturaWrapper();
 }));
 
@@ -80,15 +94,23 @@ async function finalizarRegistro(event) {
   // Recolección de variables del bloque secundario
   let q1 = document.querySelector('input[name="q1"]:checked')?.value;
   let q2 = document.querySelector('input[name="q2"]:checked')?.value;
-  let q3 = document.querySelector('input[name="q3"]:checked')?.value;
+
+  // Pregunta 3 ahora es de selección múltiple: se recogen todas las marcadas.
+  let q3Seleccionadas = Array.from(document.querySelectorAll('input[name="q3"]:checked')).map(cb => cb.value);
 
   if (q1 === 'Otra') q1 = document.getElementById('inputOtraArea').value.trim();
-  if (q3 === 'Otra') q3 = document.getElementById('inputOtraHerramienta').value.trim();
+
+  // Si marcó "Otra" en herramientas, se reemplaza ese valor por lo que escribió
+  const otraHerramientaTexto = document.getElementById('inputOtraHerramienta').value.trim();
+  if (q3Seleccionadas.includes('Otra') && otraHerramientaTexto) {
+    q3Seleccionadas = q3Seleccionadas.map(v => v === 'Otra' ? otraHerramientaTexto : v);
+  }
+  const q3 = q3Seleccionadas.join(', ');
 
   const btn = document.getElementById('btnEntrarFinal');
   const errorEl = document.getElementById('formError');
 
-  if (!q1 || !q2 || !q3) {
+  if (!q1 || !q2 || q3Seleccionadas.length === 0) {
     errorEl.innerText = "Por favor responde todas las preguntas para continuar.";
     return;
   }
