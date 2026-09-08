@@ -42,10 +42,31 @@ function mostrarCountdown() {
   if (loader) loader.style.display = 'none';
   if (countdown) countdown.style.display = 'flex';
 
+  actualizarFechaEvento();
   resaltarHorarioLocal();
   actualizarCountdown();
   if (intervaloCountdown) clearInterval(intervaloCountdown);
   intervaloCountdown = setInterval(actualizarCountdown, 1000);
+}
+
+// Escribe la fecha completa del evento (ej. "Jueves 10 de septiembre de 2026")
+// calculándola siempre a partir de EVENT_START_TIME, para que nunca quede
+// desincronizada si más adelante se cambia la fecha en config.js
+function actualizarFechaEvento() {
+  const el = document.getElementById('countdownFecha');
+  if (!el) return;
+
+  const formateador = new Intl.DateTimeFormat('es-CO', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'America/Bogota'
+  });
+
+  let texto = formateador.format(EVENT_START_TIME);
+  texto = texto.charAt(0).toUpperCase() + texto.slice(1);
+  el.textContent = '📅 ' + texto;
 }
 
 // Detecta el huso horario del navegador del visitante y resalta la fila
@@ -110,26 +131,26 @@ function toggleChat() {
   }
 }
 
+// Mensajes que el propio usuario acaba de enviar y que todavía no han sido
+// confirmados por el backend (se muestran al instante, "optimistamente",
+// para que el chat se sienta inmediato aunque la respuesta del servidor tarde).
+let mensajesPendientes = [];
+let ultimosMensajesServidor = [];
+
 function procesarDatos(datos) {
   if (!datos) return;
 
   const esNuevoChat = cajaMensajes.dataset.ultimoMensaje !== JSON.stringify(datos.mensajes);
   if (esNuevoChat) {
-    const bienvenidaHTML = `
-      <div class="mensaje">
-        <div class="usuario">🦊 Bitto <span class="hora">Fijado</span></div>
-        <div class="texto">¡Bienvenidos al lanzamiento oficial de la app! Prepárense para descubrir el futuro del talento. 🚀</div>
-      </div>`;
+    ultimosMensajesServidor = datos.mensajes;
 
-    cajaMensajes.innerHTML = bienvenidaHTML;
+    // Cualquier mensaje pendiente que ya llegó del servidor deja de mostrarse
+    // como "pendiente" (se elimina de la lista local para no duplicarlo).
+    mensajesPendientes = mensajesPendientes.filter(pendiente =>
+      !ultimosMensajesServidor.some(m => m.nombre === pendiente.nombre && m.texto === pendiente.texto)
+    );
 
-    datos.mensajes.forEach(msg => {
-      const div = document.createElement('div');
-      div.className = 'mensaje';
-      div.innerHTML = `<div class="usuario">${escapeHtml(msg.nombre)} <span class="hora">${escapeHtml(msg.hora)}</span></div><div class="texto">${escapeHtml(msg.texto)}</div>`;
-      cajaMensajes.appendChild(div);
-    });
-    cajaMensajes.scrollTop = cajaMensajes.scrollHeight;
+    renderMensajes();
     cajaMensajes.dataset.ultimoMensaje = JSON.stringify(datos.mensajes);
   }
 
@@ -140,6 +161,34 @@ function procesarDatos(datos) {
     }
   });
   if (emojisAnimados.length > 100) emojisAnimados = emojisAnimados.slice(-50);
+}
+
+// Dibuja el chat completo: mensaje fijado + mensajes confirmados del servidor
+// + mensajes propios que aún están "en camino" (optimistas).
+function renderMensajes() {
+  const bienvenidaHTML = `
+    <div class="mensaje">
+      <div class="usuario">🦊 Bitto <span class="hora">Fijado</span></div>
+      <div class="texto">¡Bienvenidos al lanzamiento oficial de la app! Prepárense para descubrir el futuro del talento. 🚀</div>
+    </div>`;
+
+  cajaMensajes.innerHTML = bienvenidaHTML;
+
+  ultimosMensajesServidor.forEach(msg => {
+    const div = document.createElement('div');
+    div.className = 'mensaje';
+    div.innerHTML = `<div class="usuario">${escapeHtml(msg.nombre)} <span class="hora">${escapeHtml(msg.hora)}</span></div><div class="texto">${escapeHtml(msg.texto)}</div>`;
+    cajaMensajes.appendChild(div);
+  });
+
+  mensajesPendientes.forEach(msg => {
+    const div = document.createElement('div');
+    div.className = 'mensaje pendiente';
+    div.innerHTML = `<div class="usuario">${escapeHtml(msg.nombre)} <span class="hora">Enviando...</span></div><div class="texto">${escapeHtml(msg.texto)}</div>`;
+    cajaMensajes.appendChild(div);
+  });
+
+  cajaMensajes.scrollTop = cajaMensajes.scrollHeight;
 }
 
 function escapeHtml(str) {
@@ -156,7 +205,17 @@ function enviar() {
   const texto = inputMensaje.value.trim();
   if (!texto) return;
   inputMensaje.value = '';
-  apiCall('guardarMensaje', { nombre: usuarioActual, texto: texto });
+
+  // Se muestra de inmediato como "pendiente" mientras el backend lo confirma,
+  // así el chat no se siente lento aunque la respuesta del servidor tarde.
+  mensajesPendientes.push({ nombre: usuarioActual, texto: texto });
+  renderMensajes();
+
+  apiCall('guardarMensaje', { nombre: usuarioActual, texto: texto }).then(() => {
+    // En cuanto el servidor confirma, se adelanta el siguiente sondeo para
+    // que el mensaje real reemplace a la versión "pendiente" lo antes posible.
+    pedirDatos();
+  });
 }
 
 function enviarReaccion(emoji) {
