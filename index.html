@@ -76,14 +76,14 @@
               </div>
 
               <div class="form-group">
-                <label>3. ¿Cuál de estas herramientas has usado?</label>
+                <label>3. ¿Cuál de estas herramientas has usado? <span class="label-hint">(puedes elegir varias)</span></label>
                 <div class="survey-options">
-                  <input type="radio" id="c1" name="q3" value="ChatGPT" required><label for="c1">ChatGPT</label>
-                  <input type="radio" id="c2" name="q3" value="Copilot"><label for="c2">Copilot</label>
-                  <input type="radio" id="c3" name="q3" value="Google Gemini"><label for="c3">Gemini</label>
-                  <input type="radio" id="c4" name="q3" value="Claude"><label for="c4">Claude</label>
-                  <input type="radio" id="c5" name="q3" value="Ninguna"><label for="c5">Ninguna</label>
-                  <input type="radio" id="c6" name="q3" value="Otra"><label for="c6">Otra</label>
+                  <input type="checkbox" id="c1" name="q3" value="ChatGPT"><label for="c1">ChatGPT</label>
+                  <input type="checkbox" id="c2" name="q3" value="Copilot"><label for="c2">Copilot</label>
+                  <input type="checkbox" id="c3" name="q3" value="Google Gemini"><label for="c3">Gemini</label>
+                  <input type="checkbox" id="c4" name="q3" value="Claude"><label for="c4">Claude</label>
+                  <input type="checkbox" id="c5" name="q3" value="Ninguna"><label for="c5">Ninguna</label>
+                  <input type="checkbox" id="c6" name="q3" value="Otra"><label for="c6">Otra</label>
                 </div>
                 <input type="text" id="inputOtraHerramienta" class="hidden-input" placeholder="Escribe qué herramienta..." style="display:none;">
               </div>
@@ -111,6 +111,7 @@
         <!-- Pantalla de cuenta regresiva: se muestra si el usuario entra antes de la hora de inicio -->
         <div id="countdown-screen">
           <div class="countdown-badge">🔴 EN VIVO PRONTO</div>
+          <div class="countdown-date" id="countdownFecha"></div>
           <div class="countdown-label">La transmisión comienza en</div>
           <div class="countdown-timer">
             <div class="countdown-unit"><span id="cdHoras">00</span><small>Horas</small></div>
