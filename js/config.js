@@ -14,7 +14,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbxYtUZ_idI5eAPMTM4mdQqf
 // Para el evento real, cambia esta línea a la fecha del evento y la hora en que
 // debe EMPEZAR A CARGAR EL VIDEO (10 min antes de la hora "oficial" mostrada al público).
 // Ejemplo evento real (si el evento inicia 10:00 AM COL): "2026-09-15T09:50:00-05:00"
-const EVENT_START_TIME = new Date("2026-09-09T16:31:00-05:00");
+const EVENT_START_TIME = new Date("2026-09-09T16:50:00-05:00");
 
 // URL de embed de Vimeo que se carga cuando llega la hora
 const VIMEO_EMBED_URL = "https://vimeo.com/event/6177107/embed?autoplay=1";
