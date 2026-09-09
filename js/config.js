@@ -17,7 +17,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbxYtUZ_idI5eAPMTM4mdQqf
 const EVENT_START_TIME = new Date("2026-09-09T16:20:00-05:00");
 
 // URL de embed de Vimeo que se carga cuando llega la hora
-const VIMEO_EMBED_URL = "https://vimeo.com/event/6177107/embed?autoplay=1";
+const VIMEO_EMBED_URL = "https://vimeo.com/event/6177107?autoplay=1";
 
 // Tiempo máximo (ms) que se espera al backend antes de mostrar error en vez de
 // quedarse "pegado" indefinidamente en el botón de conexión
