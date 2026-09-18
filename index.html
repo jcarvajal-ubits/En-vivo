@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <title>UBITS En Vivo — Prevención de lavado de activos y financiamiento del terrorismo</title>
+
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/lobby.css">
+  <link rel="stylesheet" href="css/live.css">
+</head>
+<body>
+
+  <div id="lobby-screen">
+    <div class="lobby-visual">
+      <span class="lobby-visual-hint">Aquí se ubicará tu imagen<br><small>assets/hero.png</small></span>
+      <img src="assets/edit.png" alt="" onerror="this.remove()" onload="this.previousElementSibling.style.display='none'">
+    </div>
+
+    <div class="lobby-card">
+
+      <img src="assets/bandera-chilena.png" alt="Chile" class="cl-flag-hero" onerror="this.remove()">
+
+      <div class="lobby-top">
+        <div class="lobby-top-row">
+          <img src="assets/logo/ubits-logo-azul.svg" alt="UBITS" class="lobby-logo">
+        </div>
+        <div class="pill-badge pill-cl"><span></span> EN VIVO · CHILE</div>
+      </div>
+
+      <div class="form-step">
+        <h1 class="lobby-title">Prevención de lavado de activos y financiamiento del terrorismo</h1>
+        <p class="lobby-subtitle">Un live para líderes, responsables de compliance y colaboradores que pueden detectar señales de alerta en su trabajo diario.
+Miércoles 23 de septiembre 10:00 (CHL)</p>
+
+        <form id="formRegistro" onsubmit="finalizarRegistro(event)">
+          <div class="form-group">
+            <label for="regNombre">Nombre y apellido</label>
+            <input type="text" id="regNombre" required placeholder="Ej. Javiera Contreras">
+          </div>
+          <div class="form-group">
+            <label for="regCorreo">Correo corporativo</label>
+            <input type="email" id="regCorreo" required placeholder="tu@empresa.cl">
+          </div>
+          <div class="form-group">
+            <label for="regEmpresa">Empresa</label>
+            <input type="text" id="regEmpresa" required placeholder="Nombre de tu empresa">
+          </div>
+
+          <button type="submit" class="btn-submit" id="btnEntrarFinal">
+            Entrar al live
+          </button>
+          <div class="form-error" id="formError"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="live-screen">
+    <div class="main-video-section" id="videoSection">
+      <div class="video-wrapper" id="videoWrapper">
+
+        <div class="live-badge" id="liveBadge"><span class="live-dot"></span>EN VIVO</div>
+
+        <!-- Contador de personas conectadas -->
+        <div class="contador-conectados" id="contadorConectados">
+          <span class="contador-icono">👥</span>
+          <span class="contador-numero" id="contadorNumero">—</span>
+          <span class="contador-texto">conectados</span>
+        </div>
+
+        <div id="video-loader">
+          <div class="spinner"></div>
+          <div class="loader-text">Conectando con la transmisión...</div>
+        </div>
+
+        <div id="countdown-screen">
+          <div class="countdown-inner">
+
+            <div class="loop-video-box" id="loopVideoBox">
+              <iframe
+                id="loopVideo"
+                src=""
+                frameborder="0"
+                allow="autoplay; fullscreen; picture-in-picture"
+                referrerpolicy="strict-origin-when-cross-origin"
+                title="Antesala del live">
+              </iframe>
+              <button type="button" class="btn-sonido" id="btnSonido" onclick="toggleSonido()">
+                <span class="sonido-icon">&#128266;</span> Silenciar
+              </button>
+            </div>
+
+            <div class="countdown-date" id="countdownFecha"></div>
+            <div class="countdown-label">La transmisión comienza en</div>
+            <div class="countdown-timer">
+              <div class="countdown-unit"><span id="cdHoras">00</span><small>Horas</small></div>
+              <div class="countdown-sep">:</div>
+              <div class="countdown-unit"><span id="cdMinutos">00</span><small>Min</small></div>
+              <div class="countdown-sep">:</div>
+              <div class="countdown-unit"><span id="cdSegundos">00</span><small>Seg</small></div>
+            </div>
+
+            <div class="countdown-schedule">
+              <div class="schedule-row active">
+                <img src="assets/bandera-chilena.png" alt="" class="schedule-flag" onerror="this.remove()">
+                <span class="schedule-time">10:00 hrs.</span>
+                <span class="schedule-countries">Hora de Chile</span>
+              </div>
+
+              <button type="button" class="btn-calendario" onclick="agregarAlCalendario()">
+                📅 Agregar a Google Calendar
+              </button>
+              <button type="button" class="btn-calendario" onclick="agregarAOutlook()">
+                📅 Agregar a Outlook Calendar
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <iframe
+          id="vimeoplayer"
+          src=""
+          frameborder="0"
+          allow="autoplay; fullscreen; picture-in-picture; encrypted-media; web-share"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen>
+        </iframe>
+      </div>
+
+      <button class="btn-toggle-chat" id="btnToggleChat" onclick="toggleChat()" title="Abrir chat">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+      </button>
+    </div>
+
+    <div id="chat-sidebar">
+      <div class="chat-header">
+        <span>Chat del live</span>
+        <button class="btn-close-chat" onclick="toggleChat()" title="Cerrar chat">✕</button>
+      </div>
+      <div class="mensajes-area" id="cajaMensajes"></div>
+
+      <div class="reacciones-bar">
+        <button class="btn-emoji" onclick="enviarReaccion('❤️')">❤️</button>
+        <button class="btn-emoji" onclick="enviarReaccion('💡')">💡</button>
+        <button class="btn-emoji" onclick="enviarReaccion('👏')">👏</button>
+        <button class="btn-emoji" onclick="enviarReaccion('🔥')">🔥</button>
+        <button class="btn-emoji" onclick="enviarReaccion('🚀')">🚀</button>
+      </div>
+
+      <div class="input-wrapper">
+        <div class="input-container">
+          <input type="text" id="inputMensaje" placeholder="Escribe tu pregunta..." autocomplete="off" maxlength="300">
+        </div>
+        <button class="btn-send-icon" onclick="enviar()" title="Enviar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/lobby.js"></script>
+  <script src="js/live.js"></script>
+</body>
+</html>
