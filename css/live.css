@@ -1,0 +1,353 @@
+/* ===========================================================
+   LIVE — pantalla de video en vivo y chat lateral
+   =========================================================== */
+
+#live-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; background: var(--bg-dark); padding: 15px; box-sizing: border-box; display: flex; flex-direction: row; }
+.main-video-section { width: 100%; height: 100%; position: relative; transition: width 0.3s ease; }
+.video-wrapper { width: 100%; height: 100%; position: relative; border-radius: 20px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.7), 0 0 25px rgba(46,198,255,0.15); border: 1px solid rgba(46, 198, 255, 0.2); background: #000; display: flex; align-items: center; justify-content: center; }
+#vimeoplayer { width: 100%; height: 100%; border: none; }
+
+#video-loader { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-dark); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; transition: opacity 0.6s ease; pointer-events: none; }
+.spinner { width: 45px; height: 45px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--ai-pink); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; box-shadow: 0 0 15px rgba(235,5,111,0.5); }
+.loader-text { color: white; font-size: 14px; font-weight: 600; letter-spacing: 1px; animation: pulseText 1.5s infinite; text-align: center; padding: 0 20px;}
+
+#countdown-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 50% 40%, rgba(26,107,255,0.12), var(--bg-dark) 70%); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 90; text-align: center; padding: 20px; box-sizing: border-box; }
+.countdown-badge { background: rgba(235,5,111,0.15); border: 1px solid rgba(235,5,111,0.4); color: #ff5c9e; font-size: 12px; font-weight: 700; letter-spacing: 1px; padding: 6px 16px; border-radius: 999px; margin-bottom: 22px; animation: pulse 1.6s infinite; }
+.countdown-date { display: inline-flex; align-items: center; gap: 8px; background: rgba(46,198,255,0.12); border: 1px solid rgba(46,198,255,0.35); color: var(--blue-cyan); font-size: 13px; font-weight: 600; padding: 8px 18px; border-radius: 999px; margin-bottom: 16px; letter-spacing: 0.2px; }
+
+.countdown-label { color: rgba(255,255,255,0.75); font-size: 15px; font-weight: 500; margin-bottom: 18px; letter-spacing: 0.3px; }
+.countdown-timer { display: flex; align-items: center; gap: 10px; }
+.countdown-unit { display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,0.04); border: 1px solid rgba(46,198,255,0.2); border-radius: 14px; padding: 14px 18px; min-width: 64px; box-shadow: 0 0 20px rgba(46,198,255,0.08); }
+.countdown-unit span { font-size: 32px; font-weight: 700; color: var(--blue-cyan); font-variant-numeric: tabular-nums; line-height: 1; }
+.countdown-unit small { font-size: 10px; color: rgba(255,255,255,0.5); letter-spacing: 1px; margin-top: 6px; text-transform: uppercase; }
+.countdown-sep { font-size: 28px; font-weight: 700; color: rgba(255,255,255,0.3); }
+
+.countdown-schedule { margin-top: 30px; width: 100%; max-width: 420px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px 18px; backdrop-filter: blur(10px); }
+.schedule-title { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.55); letter-spacing: 0.5px; margin-bottom: 12px; text-align: center; text-transform: uppercase; }
+.schedule-grid { display: flex; flex-direction: column; gap: 8px; }
+.schedule-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 12px; border-radius: 10px; background: rgba(255,255,255,0.02); border: 1px solid transparent; transition: 0.2s; }
+.schedule-time { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.85); flex-shrink: 0; min-width: 68px; text-align: left; }
+.schedule-countries { font-size: 12px; color: rgba(255,255,255,0.55); text-align: right; letter-spacing: 0.2px; }
+.schedule-row.active { background: rgba(46,198,255,0.1); border-color: rgba(46,198,255,0.35); box-shadow: 0 0 15px rgba(46,198,255,0.15); }
+.schedule-row.active .schedule-time { color: var(--blue-cyan); position: relative; padding-left: 14px; }
+.schedule-row.active .schedule-time::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 7px; height: 7px; border-radius: 50%; background: var(--blue-cyan); box-shadow: 0 0 8px var(--blue-cyan); animation: pulse 1.6s infinite; }
+.schedule-row.active .schedule-countries { color: rgba(255,255,255,0.9); font-weight: 600; }
+.schedule-note { text-align: center; font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 12px; font-style: italic; }
+
+.btn-toggle-chat { position: absolute; top: 20px; right: 20px; background: rgba(4, 16, 31, 0.65); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); color: white; border: 1px solid rgba(46,198,255,0.3); border-radius: 50%; width: 48px; height: 48px; font-size: 20px; cursor: pointer; z-index: 1000; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5), 0 0 10px rgba(46,198,255,0.2); transition: 0.2s; }
+.btn-toggle-chat:hover { background: var(--blue-primary); border-color: var(--blue-cyan); transform: scale(1.05); }
+
+#chat-sidebar { display: none; position: absolute; top: 15px; right: 15px; bottom: 15px; width: 340px; max-width: calc(100% - 30px); background-color: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 20px; box-shadow: -15px 0 40px rgba(0,0,0,0.5), 0 0 20px rgba(26,107,255,0.15); border: 1px solid var(--glass-border); flex-direction: column; animation: fadeInChat 0.3s ease; z-index: 500; }
+.chat-header { padding: 16px 20px; background: rgba(0,0,0,0.25); border-bottom: 1px solid rgba(255,255,255,0.06); color: white; font-weight: 600; font-size: 14px; display: flex; justify-content: space-between; align-items: center; border-radius: 20px 20px 0 0; }
+.mensajes-area { flex-grow: 1; padding: 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+.mensajes-area::-webkit-scrollbar { width: 5px; }
+.mensajes-area::-webkit-scrollbar-thumb { background: rgba(46,198,255,0.2); border-radius: 10px; }
+
+.mensaje { display: flex; flex-direction: column; animation: slideUpMsg 0.3s ease; }
+.mensaje.pendiente { opacity: 0.55; }
+.mensaje.pendiente .texto { border-style: dashed; }
+.mensaje .usuario { font-weight: 600; color: var(--blue-cyan); font-size: 12px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;}
+.mensaje .hora { color: rgba(255,255,255,0.35); font-weight: 400; font-size: 10px; }
+.mensaje .texto { font-size: 13px; line-height: 1.4; color: rgba(255,255,255,0.95); background: rgba(255, 255, 255, 0.05); padding: 10px 14px; border-radius: 0 14px 14px 14px; display: inline-block; width: fit-content; max-width: 90%; word-break: break-word; border: 1px solid rgba(255,255,255,0.03); }
+
+.reacciones-bar { display: flex; justify-content: center; gap: 10px; padding: 10px; background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.06); }
+.btn-emoji { background: none; border: none; font-size: 18px; cursor: pointer; transition: transform 0.2s; padding: 5px; border-radius: 50%; }
+.btn-emoji:hover { transform: scale(1.3) translateY(-2px); background: rgba(255,255,255,0.08); }
+
+.input-wrapper { padding: 14px; background: rgba(0,0,0,0.25); display: flex; align-items: center; gap: 10px; border-radius: 0 0 20px 20px; }
+.input-container { flex-grow: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 50px; padding: 9px 16px; display: flex; align-items: center; transition: 0.3s; }
+.input-container:focus-within { border-color: var(--blue-cyan); background: rgba(255,255,255,0.08); box-shadow: 0 0 10px rgba(46,198,255,0.2); }
+.input-container input { width: 100%; background: none; border: none; color: white; outline: none; font-family: 'Inter'; font-size: 13px; }
+.btn-send-icon { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--blue-primary), var(--blue-cyan)); color: white; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; flex-shrink: 0; box-shadow: 0 4px 10px rgba(26,107,255,0.4); }
+.btn-send-icon:hover { transform: scale(1.05); }
+
+.floating-emoji { position: fixed; bottom: 110px; left: 37%; font-size: 35px; pointer-events: none; z-index: 1900; animation: floatUp 2.5s ease-out forwards; text-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+
+@keyframes floatUp { 0% { transform: translateY(0) scale(0.5); opacity: 0; } 15% { transform: translateY(-35px) scale(1.2); opacity: 1; } 100% { transform: translateY(-280px) scale(1); opacity: 0; } }
+@keyframes fadeInChat { from { opacity: 0; transform: translateX(25px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideUpMsg { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulseText { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+
+/* Ajustes para pantallas angostas */
+@media (max-width: 768px) {
+  #live-screen { padding: 8px; }
+  .video-wrapper { border-radius: 12px; }
+  .countdown-unit { min-width: 50px; padding: 10px 12px; }
+  .countdown-unit span { font-size: 24px; }
+  .countdown-schedule { max-width: 92%; padding: 14px; }
+  .schedule-row { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .schedule-countries { text-align: left; }
+  #chat-sidebar { top: 8px; right: 8px; bottom: 8px; width: calc(100% - 16px); }
+  .floating-emoji { left: 50%; }
+}
+
+/* ===========================================================
+   LIVE CHILE — indicador EN VIVO, video en loop y ajustes de chat
+   =========================================================== */
+
+/* Indicador rojo "EN VIVO" arriba a la izquierda del reproductor */
+.live-badge {
+  position: absolute; top: 20px; left: 20px;
+  z-index: 1000;
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--cl-red);
+  color: #fff;
+  font-size: 12px; font-weight: 700; letter-spacing: 1px;
+  padding: 9px 16px;
+  border: none; border-radius: 999px;
+  cursor: default; user-select: none;
+  animation: livePulse 1.8s infinite;
+}
+.live-badge .live-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #fff;
+  animation: pulse 1.4s infinite;
+}
+
+/* Sala de espera: contenedor scrolleable para que quepa el video + reconteo */
+.countdown-inner {
+  display: flex; flex-direction: column; align-items: center;
+  width: 100%; max-height: 100%;
+  overflow-y: auto;
+  padding: 10px 0;
+}
+.countdown-inner::-webkit-scrollbar { width: 5px; }
+.countdown-inner::-webkit-scrollbar-thumb { background: rgba(46,198,255,0.2); border-radius: 10px; }
+
+/* Video corto en loop, sobre el reconteo */
+.loop-video-box {
+  width: 100%; max-width: 520px;
+  aspect-ratio: 16 / 9;
+  margin-bottom: 22px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid rgba(46, 198, 255, 0.25);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+  flex-shrink: 0;
+  position: relative;
+}
+.loop-video-box iframe { width: 100%; height: 100%; border: none; display: block; position: absolute; top: 0; left: 0; }
+
+.countdown-schedule { margin-top: 24px; }
+.schedule-row.active { border-color: rgba(213,43,30,0.45); background: rgba(213,43,30,0.08); box-shadow: 0 0 15px rgba(213,43,30,0.12); }
+.schedule-row.active .schedule-time { color: #ff7a6e; }
+.schedule-row.active .schedule-time::before { background: var(--cl-red); box-shadow: 0 0 8px var(--cl-red); }
+
+/* Chat */
+.btn-close-chat { background: none; border: none; color: #fff; cursor: pointer; font-size: 16px; padding: 5px; opacity: 0.7; transition: opacity 0.2s; }
+.btn-close-chat:hover { opacity: 1; }
+.mensaje.fijado .texto { border-left: 3px solid var(--cl-red); }
+
+@media (max-width: 768px) {
+  .live-badge { top: 12px; left: 12px; padding: 7px 12px; font-size: 11px; }
+  .loop-video-box { max-width: 100%; margin-bottom: 16px; border-radius: 12px; }
+  .countdown-schedule { margin-top: 16px; }
+}
+
+@media (max-height: 700px) {
+  .loop-video-box { max-width: 360px; margin-bottom: 14px; }
+  .countdown-unit { padding: 10px 14px; }
+  .countdown-unit span { font-size: 24px; }
+}
+
+/* Botón de sonido del video del reconteo */
+.btn-sonido {
+  position: absolute; bottom: 10px; right: 10px;
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(4, 16, 31, 0.72);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  color: #fff; border: 1px solid rgba(46, 198, 255, 0.35);
+  border-radius: 999px; padding: 7px 14px;
+  font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: 0.2s;
+}
+.btn-sonido:hover { background: var(--blue-primary); border-color: var(--blue-cyan); }
+.btn-sonido.activo { border-color: rgba(255,255,255,0.35); }
+.sonido-icon { font-size: 14px; line-height: 1; }
+
+/* Horario único: solo Chile */
+.countdown-schedule .schedule-row { justify-content: center; gap: 10px; }
+.schedule-flag { width: 34px; height: auto; flex-shrink: 0; }
+.countdown-schedule .schedule-time { min-width: 0; }
+.countdown-schedule .schedule-countries { text-align: left; }
+.schedule-row.active .schedule-time::before { content: none; }
+.schedule-row.active .schedule-time { padding-left: 0; }
+
+@media (max-width: 768px) {
+  .btn-sonido { bottom: 8px; right: 8px; padding: 6px 11px; font-size: 11px; }
+  .countdown-schedule .schedule-row { flex-direction: row; align-items: center; }
+}
+
+/* ===========================================================================
+   TEMA CLARO DE LA PANTALLA DEL LIVE
+   Mismo fondo blanco con rayitas del lobby: se va el azul oscuro.
+   Este bloque va al final a propósito, para que gane sobre las reglas de arriba.
+   =========================================================================== */
+
+#live-screen {
+  background-color: #ffffff;
+  background-image:
+    radial-gradient(circle at 50% 10%, rgba(46, 198, 255, 0.10), rgba(255,255,255,0) 60%),
+    repeating-linear-gradient(180deg, rgba(26, 107, 255, 0.05) 0 1px, rgba(255,255,255,0) 1px 26px);
+}
+
+/* El contenedor es claro; cuando entra el video de Vimeo, el iframe lo tapa */
+.video-wrapper {
+  background: #f4f7fd;
+  border: 1px solid rgba(26, 107, 255, 0.12);
+  box-shadow: 0 12px 30px rgba(4, 16, 31, 0.08);
+}
+#vimeoplayer[src=""] { display: none; }
+
+#vimeoplayer {
+  background: transparent;
+  border-radius: 20px;
+  position: absolute; top: 0; left: 0;
+}
+
+#video-loader { background: transparent; }
+.loader-text { color: rgba(4, 16, 31, 0.65); }
+.spinner { border-color: rgba(26, 107, 255, 0.15); border-top-color: var(--blue-primary); box-shadow: none; }
+
+.btn-submit .spinner,
+.btn-submit .btn-spinner {
+  width: 18px; height: 18px;
+  border-width: 2px; margin: 0;
+  flex: 0 0 auto;
+}
+
+#countdown-screen {
+  background: radial-gradient(circle at 50% 35%, rgba(46, 198, 255, 0.12), rgba(255,255,255,0) 65%);
+}
+
+.countdown-label { color: rgba(4, 16, 31, 0.6); }
+.countdown-sep { color: rgba(4, 16, 31, 0.2); }
+
+.countdown-unit {
+  background: #ffffff;
+  border: 1px solid rgba(26, 107, 255, 0.16);
+  box-shadow: 0 8px 20px rgba(4, 16, 31, 0.07);
+}
+.countdown-unit span { color: var(--blue-primary); }
+.countdown-unit small { color: rgba(4, 16, 31, 0.45); }
+
+.countdown-schedule {
+  background: #ffffff;
+  border: 1px solid rgba(26, 107, 255, 0.14);
+  box-shadow: 0 8px 20px rgba(4, 16, 31, 0.06);
+  backdrop-filter: none;
+}
+.countdown-schedule .schedule-row.active {
+  background: rgba(213, 43, 30, 0.06);
+  border-color: rgba(213, 43, 30, 0.28);
+  box-shadow: none;
+}
+.countdown-schedule .schedule-row.active .schedule-time { color: var(--cl-red); }
+.countdown-schedule .schedule-row.active .schedule-countries { color: rgba(4, 16, 31, 0.8); font-weight: 600; }
+
+/* Botón "Agregar a mi calendario" */
+.btn-calendario {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding: 11px 16px;
+  background: #ffffff;
+  color: var(--blue-primary);
+  border: 1px solid rgba(26, 107, 255, 0.25);
+  border-radius: 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.btn-calendario:hover {
+  background: var(--blue-primary);
+  color: #fff;
+  border-color: var(--blue-cyan);
+  box-shadow: 0 6px 18px rgba(26, 107, 255, 0.25);
+}
+
+/* Chat en claro */
+.btn-toggle-chat {
+  background: #ffffff;
+  color: var(--blue-primary);
+  border: 1px solid rgba(26, 107, 255, 0.2);
+  box-shadow: 0 6px 18px rgba(4, 16, 31, 0.12);
+  backdrop-filter: none;
+}
+.btn-toggle-chat:hover { background: var(--blue-primary); color: #fff; }
+
+#chat-sidebar {
+  background-color: #ffffff;
+  border: 1px solid rgba(26, 107, 255, 0.14);
+  box-shadow: 0 18px 40px rgba(4, 16, 31, 0.12);
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+.chat-header {
+  background: #f8faff;
+  border-bottom: 1px solid rgba(26, 107, 255, 0.12);
+  color: var(--bg-dark);
+}
+.btn-close-chat { color: var(--bg-dark); }
+.mensajes-area::-webkit-scrollbar-thumb { background: rgba(26, 107, 255, 0.18); }
+
+.mensaje .usuario { color: var(--blue-primary); }
+.mensaje .hora { color: rgba(4, 16, 31, 0.4); }
+.mensaje .texto {
+  background: #f4f7fd;
+  color: rgba(4, 16, 31, 0.9);
+  border: 1px solid rgba(26, 107, 255, 0.08);
+}
+.mensaje.fijado .texto { border-left: 3px solid var(--cl-red); }
+
+.reacciones-bar { background: #f8faff; border-top: 1px solid rgba(26, 107, 255, 0.10); }
+.btn-emoji:hover { background: rgba(26, 107, 255, 0.08); }
+
+.input-wrapper { background: #f8faff; }
+.input-container { background: #ffffff; border: 1px solid rgba(26, 107, 255, 0.18); }
+.input-container:focus-within { background: #ffffff; box-shadow: 0 0 12px rgba(46, 198, 255, 0.22); }
+.input-container input { color: var(--bg-dark); }
+.input-container input::placeholder { color: rgba(4, 16, 31, 0.4); }
+
+.countdown-date {
+  background: rgba(26, 107, 255, 0.08);
+  border-color: rgba(26, 107, 255, 0.22);
+  color: var(--blue-primary);
+}
+/* Contador de personas conectadas */
+.contador-conectados {
+  position: absolute;
+  top: 20px;
+  right: 90px; /* a la izquierda del botón de chat */
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  color: var(--bg-dark);
+  border: 1px solid rgba(26, 107, 255, 0.18);
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(4, 16, 31, 0.08);
+  transition: 0.3s;
+}
+.contador-conectados.pulso {
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(26, 107, 255, 0.25);
+}
+.contador-icono { font-size: 15px; line-height: 1; }
+.contador-numero { color: var(--blue-primary); font-weight: 700; }
+.contador-texto  { color: rgba(4, 16, 31, 0.55); font-weight: 500; font-size: 12px; }
+
+@media (max-width: 768px) {
+  .contador-conectados {
+    top: 12px;
+    right: 72px;
+    padding: 7px 12px;
+    font-size: 12px;
+  }
+  .contador-texto { display: none; } /* en móvil solo se ve el número */
+}

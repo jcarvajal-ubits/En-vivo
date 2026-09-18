@@ -1,0 +1,230 @@
+/* ===========================================================
+   LOBBY — pantalla de registro (paso 1) y encuesta (paso 2)
+   =========================================================== */
+
+/* Estilos del contenedor principal del lobby */
+#lobby-screen {
+  position: absolute; top: 0; left: 0;
+  width: 100%; min-height: 100%;
+  background-color: #ffffff;
+  background-image:
+    radial-gradient(circle at 50% 12%, rgba(46, 198, 255, 0.10), rgba(255,255,255,0) 60%),
+    repeating-linear-gradient(180deg, rgba(26, 107, 255, 0.05) 0 1px, rgba(255,255,255,0) 1px 26px);
+  display: flex; flex-direction: row;
+  align-items: center; justify-content: center;
+  gap: 60px;
+  z-index: 2000; transition: opacity 0.6s ease;
+  padding: 40px; box-sizing: border-box;
+  overflow-y: auto;
+}
+
+/* Columna izquierda — espacio para la imagen de marca (assets/hero.png) */
+.lobby-visual {
+  flex: 1 1 480px;
+  max-width: 660px;
+  min-height: 360px;
+  align-self: stretch;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent;
+}
+.lobby-visual img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: contain;
+  padding: 20px;
+  box-sizing: border-box;
+  filter: drop-shadow(0 25px 30px rgba(4, 16, 31, 0.18));
+  animation: bittoFloat 4s ease-in-out infinite;
+}
+
+/* Flotado suave y continuo del personaje */
+@keyframes bittoFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-14px) rotate(-1.2deg); }
+}
+.lobby-visual-hint {
+  color: var(--blue-primary);
+  font-size: 14px; font-weight: 600;
+  text-align: center; line-height: 1.6;
+  padding: 20px;
+}
+.lobby-visual-hint small { font-weight: 400; color: rgba(4, 16, 31, 0.5); }
+
+/* Estilos de la tarjeta central interactiva */
+.lobby-card {
+  background: #ffffff;
+  border: 1px solid rgba(46, 112, 255, 0.18);
+  border-radius: 28px;
+  padding: 35px 40px;
+  flex-shrink: 0;
+  max-width: 520px; width: 100%;
+  box-shadow: 0 20px 50px rgba(4, 16, 31, 0.10), 0 0 70px rgba(46, 198, 255, 0.35);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Paso único de registro */
+.form-step {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.lobby-logo { width: 150px; display: block; }
+
+/* Columna vertical: (logo + bandera) → badge EN VIVO */
+.lobby-top { display: flex; flex-direction: column; align-items: center; gap: 16px; margin-bottom: 30px; }
+
+/* Fila horizontal: logo a la izquierda, bandera a la derecha */
+.lobby-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+/* Bandera de Chile inline (junto al logo) — ya no se usa en lobby-top-row */
+.cl-flag-inline {
+  width: 56px; height: auto;
+  display: block;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 10px rgba(4, 16, 31, 0.18));
+  animation: bittoFloat 5s ease-in-out infinite;
+}
+
+/* Bandera flotando en la esquina superior derecha de la card, sin fondo */
+.cl-flag-hero {
+  position: absolute;
+  top: 80px;
+  right: 130px;
+  width: 64px; height: auto;
+  pointer-events: none;
+  mix-blend-mode: multiply;   /* elimina el fondo blanco sobre la card blanca */
+  filter: drop-shadow(0 6px 14px rgba(213, 43, 30, 0.22));
+  animation: bittoFloat 5s ease-in-out infinite;
+}
+
+.pill-badge {
+  background: rgba(26, 107, 255, 0.10);
+  border: 1px solid rgba(26, 107, 255, 0.3);
+  padding: 6px 18px; border-radius: 50px;
+  font-size: 12px; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 8px;
+  color: var(--blue-primary);
+  letter-spacing: 0.5px;
+}
+.pill-badge span { display: block; width: 8px; height: 8px; background: var(--blue-cyan); border-radius: 50%; animation: pulse 2s infinite; }
+
+/* Variante Chile del badge del lobby */
+.pill-cl {
+  background: rgba(213, 43, 30, 0.08);
+  border-color: rgba(213, 43, 30, 0.30);
+  color: var(--cl-red);
+}
+.pill-cl span { background: var(--cl-red); }
+
+.lobby-title { font-size: 24px; font-weight: 700; margin: 0 0 8px 0; line-height: 1.2; text-align: center; color: var(--bg-dark); }
+.lobby-subtitle { font-size: 14px; font-weight: 400; color: rgba(4, 16, 31, 0.65); margin: 0 0 30px 0; line-height: 1.4; text-align: center; }
+
+.form-group { margin-bottom: 20px; text-align: left; width: 100%; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--blue-primary); }
+.label-hint { font-weight: 400; color: rgba(4, 16, 31, 0.5); font-size: 12px; }
+.form-group input[type="text"], .form-group input[type="email"] {
+  width: 100%; padding: 13px 15px;
+  background: #f8faff; color: var(--bg-dark);
+  border: 1px solid #d0d2d5; border-radius: 12px;
+  font-family: 'Inter', sans-serif; box-sizing: border-box; font-size: 16px;
+  transition: all 0.3s;
+}
+.form-group input:focus { border-color: var(--blue-cyan); outline: none; background: #ffffff; box-shadow: 0 0 15px rgba(46, 198, 255, 0.25); }
+
+.survey-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.survey-options label {
+  cursor: pointer;
+  background: #f8faff;
+  border: 1px solid #d0d2d5;
+  padding: 9px 14px; border-radius: 50px;
+  font-size: 12px; font-weight: 500;
+  transition: all 0.25s ease;
+  color: var(--bg-dark); margin: 0;
+  user-select: none;
+}
+.survey-options input[type="radio"],
+.survey-options input[type="checkbox"] { display: none; }
+.survey-options input[type="radio"]:checked + label,
+.survey-options input[type="checkbox"]:checked + label {
+  background: linear-gradient(135deg, var(--blue-primary), var(--blue-cyan));
+  border-color: var(--blue-cyan);
+  box-shadow: 0 0 15px rgba(46, 198, 255, 0.4);
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.hidden-input {
+  width: 100%; padding: 11px 14px;
+  background: #f8faff; color: var(--bg-dark);
+  border: 1px solid var(--blue-cyan); border-radius: 12px;
+  font-family: 'Inter', sans-serif; font-size: 16px;
+  margin-top: 8px; box-sizing: border-box;
+  animation: slideDown 0.3s ease;
+  box-shadow: 0 0 10px rgba(46, 198, 255, 0.2);
+}
+.hidden-input:focus { outline: none; background: #ffffff; }
+
+@keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+.btn-submit {
+  width: 100%; padding: 15px; margin-top: 24px;
+  background: linear-gradient(135deg, var(--blue-primary), var(--blue-cyan));
+  color: white; border: none; border-radius: 12px;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  transition: all 0.3s;
+  display: flex; justify-content: center; align-items: center; gap: 10px;
+  box-shadow: 0 6px 20px rgba(26, 107, 255, 0.4);
+}
+.btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(46, 198, 255, 0.6); }
+.btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.btn-ia { background: linear-gradient(135deg, var(--blue-primary), var(--blue-cyan)); box-shadow: 0 6px 20px rgba(26, 107, 255, 0.4); }
+.btn-ia:hover { box-shadow: 0 8px 25px rgba(46, 198, 255, 0.6); }
+
+/* El botón no debe cambiar de tamaño al pasar a "Conectando..." */
+.btn-submit { min-height: 52px; }
+.btn-submit.cargando { opacity: 0.85; }
+.btn-spinner {
+  width: 18px; height: 18px;
+  border-width: 2px; margin-bottom: 0;
+  flex: 0 0 auto; display: inline-block; box-shadow: none;
+}
+
+.form-error { color: #d92b2b; font-size: 12px; margin-top: 8px; min-height: 16px; text-align: center; }
+
+/* Ajustes visuales para pantallas e iframes bajos */
+@media (max-height: 680px) {
+  #lobby-screen { padding: 10px; justify-content: flex-start; }
+  .lobby-card { padding: 20px 25px; border-radius: 18px; margin-top: 10px; }
+  .lobby-logo { width: 90px; margin-bottom: 10px; }
+  .cl-flag-inline { width: 42px; }
+  .lobby-top-row { gap: 10px; }
+  .lobby-top { gap: 10px; margin-bottom: 16px; }
+  .pill-badge { margin-bottom: 12px; padding: 4px 14px; }
+  .lobby-title { font-size: 20px; margin-bottom: 5px; }
+  .lobby-subtitle { font-size: 13px; margin-bottom: 15px; }
+  .form-group { margin-bottom: 10px; }
+  .form-group label { margin-bottom: 4px; }
+  .form-group input[type="text"], .form-group input[type="email"] { padding: 10px 12px; font-size: 14px; }
+  .btn-submit { padding: 12px; margin-top: 5px; font-size: 14px; }
+  .survey-options label { padding: 7px 11px; }
+}
+
+/* Ajustes para pantallas angostas */
+/* Debajo de este ancho, se oculta la imagen y el formulario vuelve a quedar centrado */
+@media (max-width: 1000px) {
+  #lobby-screen { flex-direction: column; gap: 20px; }
+  .lobby-visual { display: none; }
+}
+
+@media (max-width: 768px) {
+  .lobby-card { padding: 25px 20px; border-radius: 20px; margin: 10px; }
+  .survey-options label { font-size: 11px; padding: 7px 11px; }
+}
