@@ -4,7 +4,7 @@
    =========================================================== */
 
 // ⚠️ REEMPLAZA esta URL por la del NUEVO Apps Script publicado ("Implementar" -> "Aplicación Web")
-const API_URL = "https://script.google.com/a/macros/ubits.co/s/AKfycbzq5qzRtP9cR5o1teTneJZMWDrQKc1iSqtFAgpBUp4S3__Ae6VZirSycL1eoHFflE0N/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwIMnr6X18zMWOoLqNzwXS8q0TM8XDk-gt4HmuN9hI0fugTGncUADjY-pFvbENaILph/exec";
 
 // ---- Hora de inicio de la transmisión ----
 const EVENT_START_TIME = new Date("2026-09-23T10:00:00-03:00");
