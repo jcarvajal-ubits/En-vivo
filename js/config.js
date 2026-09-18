@@ -10,7 +10,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwIMnr6X18zMWOoLqNzwXS8
 const EVENT_START_TIME = new Date("2026-09-23T10:00:00-03:00");
 
 // Video del live (evento de Vimeo). 
-const VIMEO_EMBED_URL = "https://vimeo.com/event/6177107/embed?autoplay=1";
+const VIMEO_EMBED_URL = "https://vimeo.com/event/6199363/embed?autoplay=1";
 
 // Video de 10 seg que se repite en loop sobre el reconteo.
 const LOOP_VIDEO_BASE = "https://player.vimeo.com/video/1226034175?autoplay=1&loop=1&autopause=0&badge=0&title=0&byline=0&portrait=0&controls=0";
